@@ -9,7 +9,7 @@
             name="username"
             label=""
             placeholder="用户名"
-            maxlength="11"
+            maxlength="30"
             clearable
           />
           <van-field
@@ -34,7 +34,7 @@
           "
         >
           <div :span="20">
-            <van-button round size="large" type="primary"> 提交 </van-button>
+            <van-button round size="large" type="primary" @click="onSubmit(formState)"> 登录 </van-button>
           </div>
           <div :span="20">
             <van-button round size="large" type="default"> 注册 </van-button>
@@ -59,10 +59,11 @@
 
 <script setup lang="ts" name="App">
 import { reactive, onMounted } from 'vue'
-import { validPhone } from '@/utils/validate'
+import {validEmail, validPhone} from '@/utils/validate.js'
 import { LoginLayout } from '@/components/YuLayout'
 import { useRouter } from 'vue-router'
 import { showFailToast } from 'vant'
+import {createDirectus, rest, authentication, login} from '@directus/sdk';
 
 const router = useRouter()
 
@@ -75,7 +76,7 @@ const formState = reactive({
 
 const checkUserName = (value, rule) => {
   if (!value) return '请填写手机号码！'
-  if (!validPhone(value)) return '手机号格式不正确！'
+  if (!validEmail(value)) return '手机号格式不正确！'
   return true
 }
 
@@ -87,11 +88,15 @@ const rules = {
   password: [{ required: true, message: '密码不能为空', trigger }]
 }
 
-const onSubmit = async (values) => {
+const onSubmit = async (values: any) => {
   try {
-    const { data } = await login({ ...values })
-    const { token } = data
-    router.push('/home')
+    console.log(values)
+    const client = createDirectus('http://localhost').with(authentication('json')).with(rest());
+
+// login http request
+    const result = await client.login(values.email, values.password);
+    //const { token } = data
+      await router.push('/home')
   } catch (e) {
     showFailToast('登录失败，请稍后再试...')
   } finally {

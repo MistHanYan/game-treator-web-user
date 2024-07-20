@@ -4,6 +4,7 @@ import Issue from '@/views/Issue.vue'
 import About from '@/views/About.vue'
 import User from '@/views/User.vue'
 import LogIn from '@/views/LogIn.vue'
+import SignIn from "@/views/SignIn.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -12,7 +13,14 @@ const router = createRouter({
       path: '/',
       component: LogIn
     },
-
+    {
+      path: '/login',
+      component: LogIn
+    },
+    {
+      path: '/sign-in',
+      component: SignIn
+    },
     {
       path: '/home',
       // route level code-splitting
