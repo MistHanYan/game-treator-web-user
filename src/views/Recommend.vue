@@ -39,7 +39,7 @@
                 class="goods - card"
                 :thumb="item.img"
                 style="min-width: 100%"
-                v-for="(item, index) in data.get(tag.name)"
+                v-for="(item, index) in commoditys"
                 :key="index"
               >
                 <template #tags>
@@ -57,10 +57,10 @@
 <script setup lang="ts" name="User">
 import { LoginLayout } from '@/components/YuLayout'
 import { createDirectus, readItems, rest } from '@directus/sdk'
-import { onMounted, reactive, ref } from 'vue'
+import { onMounted, onUpdated, reactive, ref } from 'vue'
 
 const list = ref([])
-const loading = ref(false)
+const loading = ref([])
 const finished = ref(false)
 const refreshing = ref(false)
 const active = ref(0)
@@ -100,12 +100,10 @@ const onTitle = ref('推荐')
 
 const images = reactive<advertising[]>([])
 
-let commoditys = reactive<commodity[]>([])
-
-const data = reactive<Map<string, Array<commodity>>>(new Map())
+const commoditys = reactive<commodity[]>([])
 
 onMounted(() => {
-  getSlideshow()
+  getAdvertise()
   getTags()
 })
 
@@ -128,7 +126,6 @@ const getDefaultCommodity = async () => {
       for (let i = 0; i < res.length; i++) {
         commoditys[i] = Object.assign({} as commodity, res[i])
       }
-      data.set('推荐', commoditys)
     })
 
   getCommodityImg()
@@ -152,7 +149,7 @@ const getTags = async () => {
       }
     })
 }
-const getSlideshow = async () => {
+const getAdvertise = async () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const result = await client
     .request(
@@ -202,7 +199,10 @@ const onRefresh = () => {
 
 const clickTab = async ({ title }) => {
   console.log(title)
-  if (data.has(title) != true) {
+  const tabId = title
+  if (!commoditys[tabId]) {
+    loading.value = true // 设置加载状态
+
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const result = await client
       .request(
@@ -218,12 +218,13 @@ const clickTab = async ({ title }) => {
         })
       )
       .then((res: any) => {
-        commoditys = Object.assign([], res)
-        data.set(title, commoditys)
+        for (let i = 0; i < res.length; i++) {
+          commoditys[i] = Object.assign({} as commodity, res[i])
+        }
       })
-    getCommodityImg()
   }
-  console.log(data)
+
+  await getCommodityImg()
 }
 
 const rendered = (name: string | number, title: string) => {
