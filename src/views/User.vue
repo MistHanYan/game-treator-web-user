@@ -1,4 +1,2 @@
-<template>
-  <div>dabi</div>
-</template>
+<template></template>
 <script setup lang="ts" name="User"></script>

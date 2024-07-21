@@ -1,9 +1,8 @@
 <template>
   <div class="section yu-login-layout">
-    <div class="logo-container">
-      <img :src="logo" alt="" />
+    <div class="header-container">
+      <slot name="header"></slot>
     </div>
-
     <div class="body-container">
       <slot name="body"></slot>
     </div>
@@ -14,22 +13,6 @@
   </div>
 </template>
 
-<script setup>
-import logo from '@/assets/imgs/logo.jpg'
-</script>
+<script setup></script>
 
-<style lang="scss" scoped>
-.logo-container {
-  text-align: center;
-  width: 82px;
-  height: 82px;
-  border-radius: 50%;
-  margin: 60px auto 40px;
-  overflow: hidden;
-  img {
-    display: inline-block;
-    width: 100%;
-    height: 100%;
-  }
-}
-</style>
+<style lang="scss" scoped></style>

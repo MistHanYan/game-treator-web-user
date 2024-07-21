@@ -4,7 +4,8 @@ import Issue from '@/views/Issue.vue'
 import About from '@/views/About.vue'
 import User from '@/views/User.vue'
 import LogIn from '@/views/LogIn.vue'
-import SignIn from "@/views/SignIn.vue";
+import SignIn from '@/views/SignIn.vue'
+import Recommend from '@/views/Recommend.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -44,6 +45,22 @@ const router = createRouter({
           // this generates a separate chunk (About.[hash].js) for this route
           // which is lazy-loaded when the route is visited.
           component: User
+        },
+        {
+          path: '/issue',
+          name: 'issue',
+          // route level code-splitting
+          // this generates a separate chunk (About.[hash].js) for this route
+          // which is lazy-loaded when the route is visited.
+          component: Issue
+        },
+        {
+          path: '/recommend',
+          name: 'recommend',
+          // route level code-splitting
+          // this generates a separate chunk (About.[hash].js) for this route
+          // which is lazy-loaded when the route is visited.
+          component: Recommend
         }
       ]
     },

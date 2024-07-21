@@ -23,25 +23,33 @@ export default defineConfig({
     proxy: {
       '/auth': {
         target: 'http://mist-home.top:8055',
-        changeOrigin: true,
+        changeOrigin: true
       },
       '/users': {
         target: 'http://mist-home.top:8055',
-        changeOrigin: true,
+        changeOrigin: true
       },
       '/items': {
         target: 'http://mist-home.top:8055',
-        changeOrigin: true,
+        changeOrigin: true
       },
       '/roles': {
         target: 'http://mist-home.top:8055',
-        changeOrigin: true,
+        changeOrigin: true
       },
       '/files': {
         target: 'http://mist-home.top:8055',
-        changeOrigin: true,
+        changeOrigin: true
       },
-    },
+      '/assets': {
+        target: 'http://mist-home.top:8055',
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Content-Type': 'image/jpeg, image/png, image/gif, image/jpg'
+        },
+        changeOrigin: true
+      }
+    }
   },
   resolve: {
     alias: {

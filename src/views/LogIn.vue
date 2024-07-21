@@ -1,11 +1,17 @@
+<!-- eslint-disable @typescript-eslint/no-unused-vars -->
+<!-- eslint-disable @typescript-eslint/no-unused-vars -->
 <template>
   <login-layout>
+    <template #header>
+      <div class="logo-container">
+        <img :src="logo" alt="" />
+      </div>
+    </template>
     <template #body>
       <van-form label-width="0" @submit="onSubmit">
         <van-cell-group inset>
           <van-field
             v-model="formState.username"
-            :rules="rules.username"
             name="username"
             label=""
             placeholder="用户名"
@@ -19,7 +25,6 @@
             label=""
             placeholder="密码"
             clearable
-            :rules="rules.password"
           />
         </van-cell-group>
         <div
@@ -34,10 +39,12 @@
           "
         >
           <div :span="20">
-            <van-button round size="large" type="primary" @click="onSubmit(formState)"> 登录 </van-button>
+            <van-button round size="large" type="primary" @click="onSubmit(formState)">
+              登录
+            </van-button>
           </div>
           <div :span="20">
-            <van-button round size="large" type="default"> 注册 </van-button>
+            <van-button round size="large" type="default" @click="signIn"> 注册 </van-button>
           </div>
         </div>
       </van-form>
@@ -58,49 +65,57 @@
 </template>
 
 <script setup lang="ts" name="App">
-import { reactive, onMounted } from 'vue'
-import {validEmail, validPhone} from '@/utils/validate.js'
+import { reactive } from 'vue'
+//import { validEmail } from '@/utils/validate.js'
 import { LoginLayout } from '@/components/YuLayout'
 import { useRouter } from 'vue-router'
 import { showFailToast } from 'vant'
-import {createDirectus, rest, authentication, login} from '@directus/sdk';
+import logo from '@/assets/imgs/logo.jpg'
+import { createDirectus, rest, authentication } from '@directus/sdk'
+import { setCookie } from '@/utils/Cookie'
 
 const router = useRouter()
-
-const trigger = 'onBlur' // onChange
 
 const formState = reactive({
   username: '',
   password: ''
 })
 
-const checkUserName = (value, rule) => {
-  if (!value) return '请填写手机号码！'
-  if (!validEmail(value)) return '手机号格式不正确！'
-  return true
-}
-
-const rules = {
-  username: [
-    { required: true, message: '请填写用户名', trigger },
-    { validator: checkUserName, trigger }
-  ],
-  password: [{ required: true, message: '密码不能为空', trigger }]
-}
-
 const onSubmit = async (values: any) => {
   try {
-    console.log(values)
-    const client = createDirectus('http://localhost').with(authentication('json')).with(rest());
+    const client = createDirectus('http://localhost').with(authentication('json')).with(rest())
 
-// login http request
-    const result = await client.login(values.email, values.password);
+    // login http request
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const result = await client.login(values.username, values.password).then((res: any) => {
+      setCookie('directus_session_token', res.access_token, 7)
+      setCookie('refresh_token', res.refresh_token, 7)
+    })
     //const { token } = data
-      await router.push('/home')
+
+    await router.push('/home')
   } catch (e) {
     showFailToast('登录失败，请稍后再试...')
-  } finally {
-    console.log('dew')
   }
 }
+
+const signIn = () => {
+  router.push('/sign-in')
+}
 </script>
+
+<style lang="scss" scoped>
+.logo-container {
+  text-align: center;
+  width: 82px;
+  height: 82px;
+  border-radius: 50%;
+  margin: 60px auto 40px;
+  overflow: hidden;
+  img {
+    display: inline-block;
+    width: 100%;
+    height: 100%;
+  }
+}
+</style>
