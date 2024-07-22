@@ -18,14 +18,11 @@
       </van-swipe>
     </template>
     <template #foot>
-      <van-tabs v-model:active="active" swipeable sticky @click-tab="clickTab" @rendered="rendered" @change="getDefaultCommodity">
-        <!-- <van-dropdown-menu ref="menuRef">
-          <van-dropdown-item v-model="value" :options="options" />
-        </van-dropdown-menu> -->
-        <van-tab v-for="(tag,index) in tags" :key="index" :title="tag.name">
+      <van-tabs v-model:active="active" swipeable sticky @change-tab="getDefaultCommodity">
+        <van-tab v-for="(tag, index) in tags" :key="index" :title="tag.name">
           <van-pull-refresh v-model="refreshing" @refresh="onRefresh">
             <van-list
-              v-model:loading="loading[onTitle]"
+              v-model:loading="loading"
               :finished="finished"
               finished-text="没有更多了"
               @load="onLoad"
@@ -39,8 +36,8 @@
                 class="goods - card"
                 :thumb="item.img"
                 style="min-width: 100%"
-                v-for="(item, index) in commoditsTag[onTitle]"
-                :key="index"
+                v-for="(item, inde) in commoditsTag[active]"
+                :key="inde"
               >
                 <template #tags>
                   <van-tag plain type="primary">{{ item.tag_1 }}</van-tag>
@@ -54,18 +51,21 @@
     </template>
   </login-layout>
 </template>
+
 <script setup lang="ts" name="User">
 import { LoginLayout } from '@/components/YuLayout'
 import { createDirectus, readItems, rest } from '@directus/sdk'
-import { onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive, ref, watch } from 'vue'
 
-const list = ref([])
-const loading = ref<[boolean]>([false])
+const loading = ref<boolean>()
 const finished = ref(false)
 const refreshing = ref(false)
-const active = ref(0)
-
+const active = ref<number>(0)
 const client = createDirectus('http://localhost').with(rest())
+const tags = reactive<Array<tag>>([])
+const images = reactive<Array<advertising>>([])
+let commoditys = reactive<Array<commodity>>([])
+const commoditsTag = ref<Array<Array<commodity>>>([[]])
 
 interface advertising {
   id: number
@@ -90,57 +90,53 @@ interface commodity {
   status: string
   user_create: string
   date_create: string
-  imgs: []
+  imgs: Array<string>
   img: string
   game_classified: any
   tag_1: string
   tag_2: string
 }
 
-const tags = reactive<tag[]>([])
-
-const onTitle = ref(0)
-
-const images = reactive<advertising[]>([])
-
-const commoditys = reactive<commodity[]>([])
-
-const commoditsTag = ref<[commodity[]]>([[]]);
-
 onMounted(() => {
   getAdvertise()
   getTags()
 })
 
-const getDefaultCommodity = async (title: string) => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  console.log(title)
-  const result = await client
-    .request(
-      readItems('commodity_db', {
-        filter: {
-          status: {
-            _eq: 'published'
-          },
-          tag: {
-            _or: [title, '官方']
-          }
-        }
-      })
-    )
-    .then((res: any) => {
-      for (let i = 0; i < res.length; i++) {
-        commoditys[i] = Object.assign({} as commodity, res[i])
-      }
-      commoditsTag.value[onTitle.value] = commoditys;
-    })
+watch(active, () => {
+  if (active.value === 0) {
+    console.log('active', active.value)
+    getDefaultCommodity('推荐')
+  } else {
+    getDefaultCommodity(tags[active.value].name)
+  }
+})
 
-  getCommodityImg()
+const onLoad = async (index: number) => {
+  setTimeout(async () => {
+    if (refreshing.value) {
+      console.log('refreshing', refreshing.value)
+      await getCommoditysByTag(tags[active.value].name)
+      refreshing.value = false
+    }
+    loading.value = false
+  }, 800)
 }
 
+const onRefresh = () => {
+  // 清空列表数据
+  finished.value = false
+
+  // 重新加载数据
+  // 将 loading 设置为 true，表示处于加载状态
+  loading.value = true
+  onLoad(active.value)
+}
+
+/**
+ * Retrieves tags from the 'game_db' with a status of 'published'.
+ */
 const getTags = async () => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const result = await client
+  await client
     .request(
       readItems('game_db', {
         filter: {
@@ -151,100 +147,55 @@ const getTags = async () => {
       })
     )
     .then((res: any) => {
-      for (let i = 0; i < res.length; i++) {
-        tags[i] = Object.assign({} as tag, res[i])
-      }
+      tags.push(...res)
+      commoditsTag.value = tags.map(() => []) // 初始化 commoditsTag 数组
+      loading.value = false // 初始化 loading 数组
     })
 }
-const getAdvertise = async () => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const result = await client
+
+/**
+ * Asynchronously retrieves commodities by tag from the 'commodity_db' collection based on the provided title.
+ *
+ * @param {string} title - The tag to filter commodities by.
+ * @return {Promise<void>} A promise that resolves when commodities have been retrieved and assigned to the 'commoditsTag' array.
+ */
+const getCommoditysByTag = async (title: string) => {
+  console.log('获取的标签分类数据:  ' + title)
+  await client
     .request(
-      readItems('slideshow_db', {
+      readItems('commodity_db', {
         filter: {
           status: {
             _eq: 'published'
+          },
+          game_classified: {
+            key: tags[active.value].id,
+            collection: 'game_db'
           }
         }
       })
     )
     .then((res: any) => {
-      for (let i = 0; i < res.length; i++) {
-        images[i] = Object.assign({} as advertising, res[i])
-        images[i].img = 'http://localhost/assets/' + res[i].img
+      commoditys = Object.assign(commoditys, res)
+      commoditsTag.value[active.value] = commoditys
+      //console.log('获取的标签分类数据:  ' + res)
+      const index = tags.findIndex((tag) => tag.name === title)
+      if (index !== -1) {
+        commoditsTag.value[index] = commoditys
       }
     })
-}
-
-const onLoad = () => {
-  setTimeout(() => {
-    if (refreshing.value) {
-      list.value = []
-      refreshing.value = false
-    }
-
-    for (let i = 0; i < 10; i++) {
-      list.value.push(list.value.length + 1)
-    }
-    loading.value[onTitle.value] = false
-
-    if (list.value.length >= 40) {
-      finished.value = true
-    }
-  }, 1000)
-}
-
-const onRefresh = () => {
-  // 清空列表数据
-  finished.value = false
-
-  // 重新加载数据
-  // 将 loading 设置为 true，表示处于加载状态
-  loading.value[onTitle.value] = true
-  onLoad()
-}
-
-const clickTab = async ({ title }) => {
-  console.log(title)
-  onTitle.value = tags.findIndex((obj) => obj.name === title)
-  if (commoditsTag.value[onTitle.value] === null || commoditsTag.value[onTitle.value] === undefined) {
-    loading.value[onTitle.value] = true // 设置加载状态
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const result = await client
-      .request(
-        readItems('commodity_db', {
-          filter: {
-            status: {
-              _eq: 'published'
-            },
-            tag: {
-              _eq: title
-            }
-          }
-        })
-      )
-      .then((res: any) => {
-        for (let i = 0; i < res.length; i++) {
-          commoditys[i] = Object.assign({} as commodity, res[i])
-        }
-        console.log("获取的标签分类数据:  "+res)
-        commoditsTag.value[onTitle.value] = commoditys
-      })
-    console.log("当前商品池子：  "+commoditsTag)
-  }
 
   await getCommodityImg()
 }
 
-const rendered = (name: string | number, title: string) => {
-  getDefaultCommodity()
-}
-
+/**
+ * Asynchronously retrieves the images for each commodity from the 'commodity_db_files' collection and assigns them to the 'img' property of each commodity.
+ *
+ * @return {Promise<void>} A promise that resolves when all images have been retrieved and assigned.
+ */
 const getCommodityImg = async () => {
   for (let i = 0; i < commoditys.length; i++) {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const result = await client
+    await client
       .request(
         readItems('commodity_db_files', {
           filter: {
@@ -258,5 +209,33 @@ const getCommodityImg = async () => {
         commoditys[i].img = 'http://localhost/assets/' + res[0].directus_files_id
       })
   }
+}
+
+/**
+ * Retrieves the advertisements from the 'slideshow_db' collection and assigns them to the 'images' array.
+ *
+ * @return {Promise<void>} A promise that resolves when the advertisements are successfully retrieved and assigned.
+ */
+const getAdvertise = async () => {
+  await client
+    .request(
+      readItems('slideshow_db', {
+        filter: {
+          status: {
+            _eq: 'published'
+          }
+        }
+      })
+    )
+    .then((res: any) => {
+      images.push(...res)
+      images.forEach((image) => {
+        image.img = 'http://localhost/assets/' + image.img
+      })
+    })
+}
+
+const getDefaultCommodity = async (tag: string) => {
+  await getCommoditysByTag(tag)
 }
 </script>
