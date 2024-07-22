@@ -18,14 +18,14 @@
       </van-swipe>
     </template>
     <template #foot>
-      <van-tabs v-model:active="active" swipeable sticky @click-tab="clickTab" @rendered="rendered">
+      <van-tabs v-model:active="active" swipeable sticky @click-tab="clickTab" @rendered="rendered" @change="getDefaultCommodity">
         <!-- <van-dropdown-menu ref="menuRef">
           <van-dropdown-item v-model="value" :options="options" />
         </van-dropdown-menu> -->
-        <van-tab v-for="(tag, index) in tags" :key="index" :title="tag.name">
+        <van-tab v-for="(tag,index) in tags" :key="index" :title="tag.name">
           <van-pull-refresh v-model="refreshing" @refresh="onRefresh">
             <van-list
-              v-model:loading="loading"
+              v-model:loading="loading[onTitle]"
               :finished="finished"
               finished-text="没有更多了"
               @load="onLoad"
@@ -39,12 +39,12 @@
                 class="goods - card"
                 :thumb="item.img"
                 style="min-width: 100%"
-                v-for="(item, index) in commoditys"
+                v-for="(item, index) in commoditsTag[onTitle]"
                 :key="index"
               >
                 <template #tags>
-                  <van-tag plain type="primary">标签</van-tag>
-                  <van-tag plain type="primary">标签</van-tag>
+                  <van-tag plain type="primary">{{ item.tag_1 }}</van-tag>
+                  <van-tag plain type="primary">{{ item.tag_2 }}</van-tag>
                 </template>
               </van-card>
             </van-list>
@@ -57,10 +57,10 @@
 <script setup lang="ts" name="User">
 import { LoginLayout } from '@/components/YuLayout'
 import { createDirectus, readItems, rest } from '@directus/sdk'
-import { onMounted, onUpdated, reactive, ref } from 'vue'
+import { onMounted, reactive, ref } from 'vue'
 
 const list = ref([])
-const loading = ref([])
+const loading = ref<[boolean]>([false])
 const finished = ref(false)
 const refreshing = ref(false)
 const active = ref(0)
@@ -76,6 +76,7 @@ interface advertising {
 }
 
 interface tag {
+  id: number
   name: string
   log: string
 }
@@ -92,23 +93,28 @@ interface commodity {
   imgs: []
   img: string
   game_classified: any
+  tag_1: string
+  tag_2: string
 }
 
 const tags = reactive<tag[]>([])
 
-const onTitle = ref('推荐')
+const onTitle = ref(0)
 
 const images = reactive<advertising[]>([])
 
 const commoditys = reactive<commodity[]>([])
+
+const commoditsTag = ref<[commodity[]]>([[]]);
 
 onMounted(() => {
   getAdvertise()
   getTags()
 })
 
-const getDefaultCommodity = async () => {
+const getDefaultCommodity = async (title: string) => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  console.log(title)
   const result = await client
     .request(
       readItems('commodity_db', {
@@ -117,7 +123,7 @@ const getDefaultCommodity = async () => {
             _eq: 'published'
           },
           tag: {
-            _or: ['recommend', 'official']
+            _or: [title, '官方']
           }
         }
       })
@@ -126,6 +132,7 @@ const getDefaultCommodity = async () => {
       for (let i = 0; i < res.length; i++) {
         commoditys[i] = Object.assign({} as commodity, res[i])
       }
+      commoditsTag.value[onTitle.value] = commoditys;
     })
 
   getCommodityImg()
@@ -179,7 +186,7 @@ const onLoad = () => {
     for (let i = 0; i < 10; i++) {
       list.value.push(list.value.length + 1)
     }
-    loading.value = false
+    loading.value[onTitle.value] = false
 
     if (list.value.length >= 40) {
       finished.value = true
@@ -193,15 +200,15 @@ const onRefresh = () => {
 
   // 重新加载数据
   // 将 loading 设置为 true，表示处于加载状态
-  loading.value = true
+  loading.value[onTitle.value] = true
   onLoad()
 }
 
 const clickTab = async ({ title }) => {
   console.log(title)
-  const tabId = title
-  if (!commoditys[tabId]) {
-    loading.value = true // 设置加载状态
+  onTitle.value = tags.findIndex((obj) => obj.name === title)
+  if (commoditsTag.value[onTitle.value] === null || commoditsTag.value[onTitle.value] === undefined) {
+    loading.value[onTitle.value] = true // 设置加载状态
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const result = await client
@@ -221,7 +228,10 @@ const clickTab = async ({ title }) => {
         for (let i = 0; i < res.length; i++) {
           commoditys[i] = Object.assign({} as commodity, res[i])
         }
+        console.log("获取的标签分类数据:  "+res)
+        commoditsTag.value[onTitle.value] = commoditys
       })
+    console.log("当前商品池子：  "+commoditsTag)
   }
 
   await getCommodityImg()
