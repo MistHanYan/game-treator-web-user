@@ -25,6 +25,7 @@
               v-model:loading="loading"
               :finished="finished"
               finished-text="没有更多了"
+              :error="error"
               @load="onLoad"
               style="max-height: 100%; max-width: 100%"
             >
@@ -38,6 +39,7 @@
                 style="min-width: 100%"
                 v-for="(item, inde) in commoditsTag[active]"
                 :key="inde"
+                @click="goCommodity(item.id)"
               >
                 <template #tags>
                   <van-tag plain type="primary" v-if="item.tag_1 !== null">{{
@@ -54,10 +56,14 @@
       </van-tabs>
     </template>
   </login-layout>
+  <van-dialog v-model:show="notificationShow" title="标题" show-cancel-button>
+    <img src="https://fastly.jsdelivr.net/npm/@vant/assets/apple-3.jpeg" />
+  </van-dialog>
 </template>
 
 <script setup lang="ts" name="User">
 import { LoginLayout } from '@/components/YuLayout'
+import router from '@/router'
 import { createDirectus, readItems, rest } from '@directus/sdk'
 import { onMounted, reactive, ref, watch } from 'vue'
 
@@ -69,6 +75,10 @@ const client = createDirectus('http://localhost').with(rest())
 const tags = reactive<Array<tag>>([])
 const images = reactive<Array<advertising>>([])
 const commoditsTag = ref<Array<Array<commodity>>>([[]])
+const error = ref<boolean>(false)
+const page = ref<Array<number>>([])
+const notificationShow = ref<boolean>(false)
+const popUpAdShow = ref<boolean>(false)
 
 interface advertising {
   id: number
@@ -116,21 +126,22 @@ watch(active, () => {
 const onLoad = async () => {
   if (
     commoditsTag.value[active.value].length === 0 ||
-    commoditsTag.value[active.value].length === null
+    commoditsTag.value[active.value].length === null ||
+    commoditsTag.value[active.value].length >= 10
   ) {
-    setTimeout(() => {
+    setTimeout(async () => {
       if (!refreshing.value) {
-        getCommoditysByTag(tags[active.value].name)
+        await getCommoditysByTag().catch(() => {
+          error.value = true
+        })
         refreshing.value = false
       }
       loading.value = false
+      page.value[active.value] = page.value[active.value] + 1
     }, 800)
   } else {
     refreshing.value = false
     loading.value = false
-    if (commoditsTag.value[active.value].length < 15) {
-      finished.value = true
-    }
   }
 }
 
@@ -144,9 +155,6 @@ const onRefresh = () => {
   onLoad()
 }
 
-/**
- * Retrieves tags from the 'game_db' with a status of 'published'.
- */
 const getTags = async () => {
   await client
     .request(
@@ -162,17 +170,17 @@ const getTags = async () => {
       tags.push(...res)
       commoditsTag.value = tags.map(() => []) // 初始化 commoditsTag 数组
       loading.value = false // 初始化 loading 数组
+      page.value = tags.map(() => 0)
     })
 }
 
-/**
- * Asynchronously retrieves commodities by tag from the 'commodity_db' collection based on the provided title.
- *
- * @param {string} title - The tag to filter commodities by.
- * @return {Promise<void>} A promise that resolves when commodities have been retrieved and assigned to the 'commoditsTag' array.
- */
-const getCommoditysByTag = async (title: string) => {
-  if (commoditsTag.value[active.value].length === 0) {
+const getCommoditysByTag = async () => {
+  console.log('active', active.value)
+  console.log('active', refreshing.value)
+  if (
+    commoditsTag.value[active.value].length === 0 ||
+    commoditsTag.value[active.value].length >= 10
+  ) {
     // 推荐页面请求
     if (active.value === 0) {
       await getDefaultCommodity()
@@ -180,6 +188,7 @@ const getCommoditysByTag = async (title: string) => {
       await client
         .request(
           readItems('commodity_db', {
+            page: page.value[active.value] + 1,
             filter: {
               _and: [
                 {
@@ -199,13 +208,14 @@ const getCommoditysByTag = async (title: string) => {
           })
         )
         .then((res: any) => {
-          commoditsTag.value[active.value] = res
-          // const index = tags.findIndex((tag) => tag.name === title)
-
-          // 如果请求数据长度小于15，则数据加载完毕
-          if (res.length < 15) {
+          // 如果请求数据长度小于10，则数据加载完毕
+          if (res.length < 10) {
+            commoditsTag.value[active.value] = res
             finished.value = true
+          } else {
+            commoditsTag.value[active.value].push(...res)
           }
+
           loading.value = false
         })
     }
@@ -214,11 +224,6 @@ const getCommoditysByTag = async (title: string) => {
   }
 }
 
-/**
- * Asynchronously retrieves the images for each commodity from the 'commodity_db_files' collection and assigns them to the 'img' property of each commodity.
- *
- * @return {Promise<void>} A promise that resolves when all images have been retrieved and assigned.
- */
 const getCommodityImg = async () => {
   for (let i = 0; i < commoditsTag.value[active.value].length; i++) {
     await client
@@ -238,11 +243,6 @@ const getCommodityImg = async () => {
   }
 }
 
-/**
- * Retrieves the advertisements from the 'slideshow_db' collection and assigns them to the 'images' array.
- *
- * @return {Promise<void>} A promise that resolves when the advertisements are successfully retrieved and assigned.
- */
 const getAdvertise = async () => {
   await client
     .request(
@@ -263,9 +263,12 @@ const getAdvertise = async () => {
 }
 
 const getDefaultCommodity = async () => {
+  console.log('default page: ', page.value[active.value] + 1)
+  // 获取推荐商品
   await client
     .request(
       readItems('commodity_db', {
+        page: page.value[active.value] + 1,
         filter: {
           _and: [
             {
@@ -292,14 +295,31 @@ const getDefaultCommodity = async () => {
       })
     )
     .then((res: any) => {
-      commoditsTag.value[active.value] = res
+      if (commoditsTag.value[active.value].length >= 10) {
+        commoditsTag.value[active.value].push(...res)
+      } else {
+        commoditsTag.value[active.value] = res
+      }
       // const index = tags.findIndex((tag) => tag.name === title)
 
-      // 如果请求数据长度小于15，则数据加载完毕
-      if (res.length < 15) {
+      // 如果请求数据长度小于10，则数据加载完毕
+      if (res.length < 10) {
         finished.value = true
       }
       loading.value = false
     })
 }
+
+const goCommodity = (id: number) => {
+  router.push({
+    name: 'commodity',
+    query: {
+      id
+    }
+  })
+}
+
+const getNotification = async () => {}
+
+const getPopUpAd = async () => {}
 </script>

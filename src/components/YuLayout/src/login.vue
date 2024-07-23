@@ -1,5 +1,6 @@
+<!-- eslint-disable vue/multi-word-component-names -->
 <template>
-  <div class="section yu-login-layout">
+  <div class="yu-login-layout">
     <div class="header-container">
       <slot name="header"></slot>
     </div>
@@ -15,4 +16,13 @@
 
 <script setup></script>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+.yu-login-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  .body-container {
+    flex: 1;
+  }
+}
+</style>

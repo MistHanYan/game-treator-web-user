@@ -56,24 +56,17 @@
   </van-form>
 </template>
 <script setup lang="ts" name="Issue">
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 
-const router = useRouter();
-const showPicker = ref(false);
-const columns = ref([
-  "角色扮演",
-  "动作射击",
-  "模拟经营",
-  "竞速竞技",
-  "策略游戏",
-  "桌面游戏",
-])
-const result = ref('');
-const checked = ref('1');
-const message = ref('');
-const commodityName = ref('');
-const number = ref(0);
+const router = useRouter()
+const showPicker = ref(false)
+const columns = ref(['角色扮演', '动作射击', '模拟经营', '竞速竞技', '策略游戏', '桌面游戏'])
+const result = ref('')
+const checked = ref('1')
+const message = ref('')
+const commodityName = ref('')
+const number = ref(0)
 const onConfirm = (value: string) => {}
 const onSubmit = () => {}
 const onOversize = () => {}
