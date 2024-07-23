@@ -270,7 +270,7 @@ async function onSubmit() {
         })
     }
     const client = createDirectus('http://localhost').with(rest())
-    const result = await client.request(
+    await client.request(
       registerUser(signInForm.email, signInForm.password, {
         last_name: signInForm.nickname
       })
