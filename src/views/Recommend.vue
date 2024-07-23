@@ -12,13 +12,13 @@
       <van-swipe :autoplay="6000" lazy-render>
         <van-swipe-item v-for="(image, index) in images" :key="index">
           <a :href="image.link">
-            <img :src="image.img" style="max-width: 100%" />
+            <img :src="image.img" style="max-width: 100%"  alt="推广图"/>
           </a>
         </van-swipe-item>
       </van-swipe>
     </template>
     <template #foot>
-      <van-tabs v-model:active="active" swipeable sticky @change-tab="getDefaultCommodity">
+      <van-tabs v-model:active="active" swipeable sticky>
         <van-tab v-for="(tag, index) in tags" :key="index" :title="tag.name">
           <van-pull-refresh v-model="refreshing" @refresh="onRefresh">
             <van-list
@@ -40,8 +40,8 @@
                 :key="inde"
               >
                 <template #tags>
-                  <van-tag plain type="primary">{{ item.tag_1 }}</van-tag>
-                  <van-tag plain type="primary">{{ item.tag_2 }}</van-tag>
+                  <van-tag plain type="primary" v-if="item.tag_1 !== null">{{ item.tag_1 }}</van-tag>
+                  <van-tag plain type="primary" v-if="item.tag_2 !== null">{{ item.tag_2 }}</van-tag>
                 </template>
               </van-card>
             </van-list>
@@ -64,7 +64,6 @@ const active = ref<number>(0)
 const client = createDirectus('http://localhost').with(rest())
 const tags = reactive<Array<tag>>([])
 const images = reactive<Array<advertising>>([])
-let commoditys = reactive<Array<commodity>>([])
 const commoditsTag = ref<Array<Array<commodity>>>([[]])
 
 interface advertising {
@@ -105,17 +104,15 @@ onMounted(() => {
 watch(active, () => {
   if (active.value === 0) {
     console.log('active', active.value)
-    getDefaultCommodity('推荐')
   } else {
-    getDefaultCommodity(tags[active.value].name)
+    finished.value = false
   }
 })
 
-const onLoad = async (index: number) => {
-  setTimeout(async () => {
-    if (refreshing.value) {
-      console.log('refreshing', refreshing.value)
-      await getCommoditysByTag(tags[active.value].name)
+const onLoad = async () => {
+  setTimeout(() => {
+    if (!refreshing.value) {
+      getCommoditysByTag(tags[active.value].name)
       refreshing.value = false
     }
     loading.value = false
@@ -129,7 +126,7 @@ const onRefresh = () => {
   // 重新加载数据
   // 将 loading 设置为 true，表示处于加载状态
   loading.value = true
-  onLoad(active.value)
+  onLoad()
 }
 
 /**
@@ -160,32 +157,83 @@ const getTags = async () => {
  * @return {Promise<void>} A promise that resolves when commodities have been retrieved and assigned to the 'commoditsTag' array.
  */
 const getCommoditysByTag = async (title: string) => {
-  console.log('获取的标签分类数据:  ' + title)
-  await client
-    .request(
-      readItems('commodity_db', {
-        filter: {
-          status: {
-            _eq: 'published'
-          },
-          game_classified: {
-            key: tags[active.value].id,
-            collection: 'game_db'
-          }
-        }
-      })
-    )
-    .then((res: any) => {
-      commoditys = Object.assign(commoditys, res)
-      commoditsTag.value[active.value] = commoditys
-      //console.log('获取的标签分类数据:  ' + res)
-      const index = tags.findIndex((tag) => tag.name === title)
-      if (index !== -1) {
-        commoditsTag.value[index] = commoditys
-      }
-    })
+  if(commoditsTag.value[active.value].length === 0){
+    // 推荐页面请求
+    if(active.value===0){
+      await client
+          .request(
+              readItems('commodity_db', {
+                filter: {
+                  _and: [
+                    {
+                      status: {
+                        _eq: 'published'
+                      }
+                    },
+                    {
+                      _or:[
+                        {
+                          tag :{
+                            _eq: '推荐'
+                          }
+                        },
+                        {
+                          tag :{
+                            _eq: '官方'
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              })
+          )
+          .then((res: any) => {
+            commoditsTag.value[active.value] = res
+            // const index = tags.findIndex((tag) => tag.name === title)
 
-  await getCommodityImg()
+            // 如果请求数据长度小于15，则数据加载完毕
+            if(res.length < 15) {
+              finished.value = true
+            }
+            loading.value=false;
+          })
+    }else {
+      await client
+          .request(
+              readItems('commodity_db', {
+                filter: {
+                  _and: [
+                    {
+                      status: {
+                        _eq: 'published'
+                      }
+                    },
+                    {
+                      game_classified :{
+                        name :{
+                          _eq : title
+                        }
+                    }
+                    }
+                  ]
+                }
+              })
+          )
+          .then((res: any) => {
+            commoditsTag.value[active.value] = res
+            // const index = tags.findIndex((tag) => tag.name === title)
+
+            // 如果请求数据长度小于15，则数据加载完毕
+            if(res.length < 15) {
+              finished.value = true
+            }
+            loading.value=false;
+          })
+    }
+
+    await getCommodityImg()
+  }
 }
 
 /**
@@ -194,19 +242,19 @@ const getCommoditysByTag = async (title: string) => {
  * @return {Promise<void>} A promise that resolves when all images have been retrieved and assigned.
  */
 const getCommodityImg = async () => {
-  for (let i = 0; i < commoditys.length; i++) {
+  for (let i = 0; i < commoditsTag.value[active.value].length; i++) {
     await client
       .request(
         readItems('commodity_db_files', {
           filter: {
             id: {
-              _eq: commoditys[i].imgs[0]
+              _eq: commoditsTag.value[active.value][i].imgs[0]
             }
           }
         })
       )
       .then((res: any) => {
-        commoditys[i].img = 'http://localhost/assets/' + res[0].directus_files_id
+        commoditsTag.value[active.value][i].img = 'http://localhost/assets/' + res[0].directus_files_id
       })
   }
 }
@@ -233,9 +281,5 @@ const getAdvertise = async () => {
         image.img = 'http://localhost/assets/' + image.img
       })
     })
-}
-
-const getDefaultCommodity = async (tag: string) => {
-  await getCommoditysByTag(tag)
 }
 </script>
