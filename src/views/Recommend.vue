@@ -12,7 +12,7 @@
       <van-swipe :autoplay="6000" lazy-render>
         <van-swipe-item v-for="(image, index) in images" :key="index">
           <a :href="image.link">
-            <img :src="image.img" style="max-width: 100%"  alt="推广图"/>
+            <img :src="image.img" style="max-width: 100%" alt="推广图" />
           </a>
         </van-swipe-item>
       </van-swipe>
@@ -40,8 +40,12 @@
                 :key="inde"
               >
                 <template #tags>
-                  <van-tag plain type="primary" v-if="item.tag_1 !== null">{{ item.tag_1 }}</van-tag>
-                  <van-tag plain type="primary" v-if="item.tag_2 !== null">{{ item.tag_2 }}</van-tag>
+                  <van-tag plain type="primary" v-if="item.tag_1 !== null">{{
+                    item.tag_1
+                  }}</van-tag>
+                  <van-tag plain type="primary" v-if="item.tag_2 !== null">{{
+                    item.tag_2
+                  }}</van-tag>
                 </template>
               </van-card>
             </van-list>
@@ -110,13 +114,24 @@ watch(active, () => {
 })
 
 const onLoad = async () => {
-  setTimeout(() => {
-    if (!refreshing.value) {
-      getCommoditysByTag(tags[active.value].name)
-      refreshing.value = false
-    }
+  if (
+    commoditsTag.value[active.value].length === 0 ||
+    commoditsTag.value[active.value].length === null
+  ) {
+    setTimeout(() => {
+      if (!refreshing.value) {
+        getCommoditysByTag(tags[active.value].name)
+        refreshing.value = false
+      }
+      loading.value = false
+    }, 800)
+  } else {
+    refreshing.value = false
     loading.value = false
-  }, 800)
+    if (commoditsTag.value[active.value].length < 15) {
+      finished.value = true
+    }
+  }
 }
 
 const onRefresh = () => {
@@ -157,79 +172,42 @@ const getTags = async () => {
  * @return {Promise<void>} A promise that resolves when commodities have been retrieved and assigned to the 'commoditsTag' array.
  */
 const getCommoditysByTag = async (title: string) => {
-  if(commoditsTag.value[active.value].length === 0){
+  if (commoditsTag.value[active.value].length === 0) {
     // 推荐页面请求
-    if(active.value===0){
+    if (active.value === 0) {
+      await getDefaultCommodity()
+    } else {
       await client
-          .request(
-              readItems('commodity_db', {
-                filter: {
-                  _and: [
-                    {
-                      status: {
-                        _eq: 'published'
-                      }
-                    },
-                    {
-                      _or:[
-                        {
-                          tag :{
-                            _eq: '推荐'
-                          }
-                        },
-                        {
-                          tag :{
-                            _eq: '官方'
-                          }
-                        }
-                      ]
+        .request(
+          readItems('commodity_db', {
+            filter: {
+              _and: [
+                {
+                  status: {
+                    _eq: 'published'
+                  }
+                },
+                {
+                  game_classified: {
+                    id: {
+                      _eq: tags[active.value].id
                     }
-                  ]
+                  }
                 }
-              })
-          )
-          .then((res: any) => {
-            commoditsTag.value[active.value] = res
-            // const index = tags.findIndex((tag) => tag.name === title)
-
-            // 如果请求数据长度小于15，则数据加载完毕
-            if(res.length < 15) {
-              finished.value = true
+              ]
             }
-            loading.value=false;
           })
-    }else {
-      await client
-          .request(
-              readItems('commodity_db', {
-                filter: {
-                  _and: [
-                    {
-                      status: {
-                        _eq: 'published'
-                      }
-                    },
-                    {
-                      game_classified :{
-                        name :{
-                          _eq : title
-                        }
-                    }
-                    }
-                  ]
-                }
-              })
-          )
-          .then((res: any) => {
-            commoditsTag.value[active.value] = res
-            // const index = tags.findIndex((tag) => tag.name === title)
+        )
+        .then((res: any) => {
+          commoditsTag.value[active.value] = res
+          // const index = tags.findIndex((tag) => tag.name === title)
 
-            // 如果请求数据长度小于15，则数据加载完毕
-            if(res.length < 15) {
-              finished.value = true
-            }
-            loading.value=false;
-          })
+          // 如果请求数据长度小于15，则数据加载完毕
+          if (res.length < 15) {
+            finished.value = true
+          }
+          loading.value = false
+        })
     }
 
     await getCommodityImg()
@@ -254,7 +232,8 @@ const getCommodityImg = async () => {
         })
       )
       .then((res: any) => {
-        commoditsTag.value[active.value][i].img = 'http://localhost/assets/' + res[0].directus_files_id
+        commoditsTag.value[active.value][i].img =
+          'http://localhost/assets/' + res[0].directus_files_id
       })
   }
 }
@@ -280,6 +259,47 @@ const getAdvertise = async () => {
       images.forEach((image) => {
         image.img = 'http://localhost/assets/' + image.img
       })
+    })
+}
+
+const getDefaultCommodity = async () => {
+  await client
+    .request(
+      readItems('commodity_db', {
+        filter: {
+          _and: [
+            {
+              status: {
+                _eq: 'published'
+              }
+            },
+            {
+              _or: [
+                {
+                  tag: {
+                    _eq: '推荐'
+                  }
+                },
+                {
+                  tag: {
+                    _eq: '官方'
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      })
+    )
+    .then((res: any) => {
+      commoditsTag.value[active.value] = res
+      // const index = tags.findIndex((tag) => tag.name === title)
+
+      // 如果请求数据长度小于15，则数据加载完毕
+      if (res.length < 15) {
+        finished.value = true
+      }
+      loading.value = false
     })
 }
 </script>
