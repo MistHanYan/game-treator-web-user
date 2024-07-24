@@ -12,7 +12,11 @@
       <van-swipe :autoplay="6000" lazy-render>
         <van-swipe-item v-for="(image, index) in images" :key="index">
           <a :href="image.link">
-            <img :src="image.img" style="max-width: 100%" alt="推广图" />
+            <img
+              :src="'http://localhost/assets/' + image.img"
+              style="max-width: 100%"
+              alt="推广图"
+            />
           </a>
         </van-swipe-item>
       </van-swipe>
@@ -35,7 +39,7 @@
                 :tag="item.tag"
                 :title="item.name"
                 class="goods - card"
-                :thumb="item.img"
+                :thumb="'http://localhost/assets/' + item.imgs[0].directus_files_id"
                 style="min-width: 100%"
                 v-for="(item, inde) in commoditsTag[active]"
                 :key="inde"
@@ -103,11 +107,17 @@ interface commodity {
   status: string
   user_create: string
   date_create: string
-  imgs: Array<string>
+  imgs: Array<img>
   img: string
   game_classified: any
   tag_1: string
   tag_2: string
+}
+
+interface img {
+  id: number
+  directus_files_id: string
+  commodity_db_id: number
 }
 
 onMounted(() => {
@@ -127,7 +137,8 @@ const onLoad = async () => {
   if (
     commoditsTag.value[active.value].length === 0 ||
     commoditsTag.value[active.value].length === null ||
-    commoditsTag.value[active.value].length >= 10
+    commoditsTag.value[active.value].length >= 10 ||
+    commoditsTag.value[active.value].length === undefined
   ) {
     setTimeout(async () => {
       if (!refreshing.value) {
@@ -145,9 +156,12 @@ const onLoad = async () => {
   }
 }
 
-const onRefresh = () => {
+const onRefresh = async () => {
   // 清空列表数据
   finished.value = false
+  refreshing.value = false
+  commoditsTag.value[active.value] = []
+  page.value[active.value] = 0
 
   // 重新加载数据
   // 将 loading 设置为 true，表示处于加载状态
@@ -188,6 +202,7 @@ const getCommoditysByTag = async () => {
       await client
         .request(
           readItems('commodity_db', {
+            fields: ['*', 'imgs.*'],
             page: page.value[active.value] + 1,
             filter: {
               _and: [
@@ -219,27 +234,6 @@ const getCommoditysByTag = async () => {
           loading.value = false
         })
     }
-
-    await getCommodityImg()
-  }
-}
-
-const getCommodityImg = async () => {
-  for (let i = 0; i < commoditsTag.value[active.value].length; i++) {
-    await client
-      .request(
-        readItems('commodity_db_files', {
-          filter: {
-            id: {
-              _eq: commoditsTag.value[active.value][i].imgs[0]
-            }
-          }
-        })
-      )
-      .then((res: any) => {
-        commoditsTag.value[active.value][i].img =
-          'http://localhost/assets/' + res[0].directus_files_id
-      })
   }
 }
 
@@ -256,9 +250,6 @@ const getAdvertise = async () => {
     )
     .then((res: any) => {
       images.push(...res)
-      images.forEach((image) => {
-        image.img = 'http://localhost/assets/' + image.img
-      })
     })
 }
 
@@ -268,6 +259,7 @@ const getDefaultCommodity = async () => {
   await client
     .request(
       readItems('commodity_db', {
+        fields: ['*', 'imgs.*'],
         page: page.value[active.value] + 1,
         filter: {
           _and: [
