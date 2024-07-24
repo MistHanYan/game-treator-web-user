@@ -204,6 +204,7 @@ const getCommoditysByTag = async () => {
           readItems('commodity_db', {
             fields: ['*', 'imgs.*'],
             page: page.value[active.value] + 1,
+            limit: 10,
             filter: {
               _and: [
                 {
@@ -261,6 +262,7 @@ const getDefaultCommodity = async () => {
       readItems('commodity_db', {
         fields: ['*', 'imgs.*'],
         page: page.value[active.value] + 1,
+        limit: 10,
         filter: {
           _and: [
             {
