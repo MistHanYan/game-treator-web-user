@@ -23,12 +23,11 @@
   </login-layout>
 </template>
 <script setup lang="ts" name="Commodity">
-import { reactive, ref } from 'vue'
+import { onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { LoginLayout } from '@/components/YuLayout'
 import router from '@/router'
-
-const props = defineProps({})
+import { createDirectus, readItems, rest } from '@directus/sdk'
 
 const images = [
   'https://fastly.jsdelivr.net/npm/@vant/assets/apple-1.jpeg',
@@ -36,8 +35,26 @@ const images = [
 ]
 
 const commodity = reactive({})
+const directus = createDirectus('http://localhost').with(rest())
 
-const getCommodity = () => {}
+const commodityId = defineProps(['id'])
+
+onMounted(() => {
+  getCommodity()
+})
+
+const getCommodity = async () => {
+  console.log(commodityId)
+  await directus.request(
+    readItems('commodity_db', {
+      filter: {
+        id: {
+          _eq: commodityId.id
+        }
+      }
+    })
+  )
+}
 const onSubmit = () => {
   router.push({
     name: 'order'

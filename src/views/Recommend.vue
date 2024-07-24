@@ -10,7 +10,7 @@
     </template>
     <template #body>
       <van-swipe :autoplay="6000" lazy-render>
-        <van-swipe-item v-for="(image, index) in images" :key="index">
+        <van-swipe-item v-for="(image, index) in slideshowImages" :key="index">
           <a :href="image.link">
             <img
               :src="'http://localhost/assets/' + image.img"
@@ -60,8 +60,16 @@
       </van-tabs>
     </template>
   </login-layout>
-  <van-dialog v-model:show="notificationShow" title="标题" show-cancel-button>
-    <img src="https://fastly.jsdelivr.net/npm/@vant/assets/apple-3.jpeg" />
+  <van-dialog v-model:show="announcementShow" :title="announcementContent.title">
+    <p>{{ announcementContent.content }}</p>
+  </van-dialog>
+
+  <van-dialog v-model:show="popUpAdShow" :title="popUpAd.theme" show-cancel-button>
+    <div class="container">
+      <a :href="popUpAd.link">
+        <img :src="'http://localhost/assets/' + popUpAd.img" />
+      </a>
+    </div>
   </van-dialog>
 </template>
 
@@ -77,14 +85,38 @@ const refreshing = ref(false)
 const active = ref<number>(0)
 const client = createDirectus('http://localhost').with(rest())
 const tags = reactive<Array<tag>>([])
-const images = reactive<Array<advertising>>([])
+const slideshowImages = reactive<Array<slideshow>>([])
 const commoditsTag = ref<Array<Array<commodity>>>([[]])
 const error = ref<boolean>(false)
 const page = ref<Array<number>>([])
-const notificationShow = ref<boolean>(false)
+const announcementShow = ref<boolean>(false)
 const popUpAdShow = ref<boolean>(false)
+const popUpAd = reactive<advertising>({
+  id: 0,
+  theme: '',
+  img: '',
+  link: ''
+})
+const announcementContent = reactive<announcement>({
+  id: 0,
+  title: '',
+  content: ''
+})
 
 interface advertising {
+  id: number
+  theme: string
+  img: string
+  link: string
+}
+
+interface announcement {
+  id: number
+  title: string
+  content: string
+}
+
+interface slideshow {
   id: number
   status: string
   img: string
@@ -121,8 +153,10 @@ interface img {
 }
 
 onMounted(() => {
-  getAdvertise()
+  getSlideshow()
   getTags()
+  getPopUpAd()
+  getAnnouncement()
 })
 
 watch(active, () => {
@@ -133,6 +167,21 @@ watch(active, () => {
   }
 })
 
+/**
++ * Asynchronously loads more commodities based on the current active tag and page.
++ *
++ * This function checks if the length of the current active tag's commodities is
++ * zero, null, greater than or equal to 10, or undefined. If any of these conditions
++ * are met, it sets a timeout of 800 milliseconds. During this timeout, it checks
++ * if the refreshing flag is false. If it is, it calls the getCommoditysByTag
++ * function and sets the refreshing flag to false. It also sets the loading flag
++ * to false and increments the page value for the current active tag.
++ *
++ * If none of the conditions are met, it sets the refreshing and loading flags to
++ * false.
++ *
++ * @return {Promise<void>} A promise that resolves when the function is complete.
++ */
 const onLoad = async () => {
   if (
     commoditsTag.value[active.value].length === 0 ||
@@ -156,6 +205,11 @@ const onLoad = async () => {
   }
 }
 
+/**
++ * Refreshes the list data and reloads it.
++ *
++ * @return {Promise<void>} A promise that resolves when the list is refreshed and reloaded.
++ */
 const onRefresh = async () => {
   // 清空列表数据
   finished.value = false
@@ -169,6 +223,14 @@ const onRefresh = async () => {
   onLoad()
 }
 
+/**
++ * Retrieves tags from the 'game_db' table based on the 'status' field.
++ * Initializes the 'commoditsTag' array with empty arrays for each tag.
++ * Initializes the 'loading' array to false.
++ * Initializes the 'page' array with zeros for each tag.
++ *
++ * @return {Promise<void>} - A promise that resolves when the tags are retrieved and processed.
++ */
 const getTags = async () => {
   await client
     .request(
@@ -188,6 +250,11 @@ const getTags = async () => {
     })
 }
 
+/**
++ * Retrieves commodities by tag based on the current active tab and page.
++ *
++ * @return {Promise<void>} - A promise that resolves when the commodities are retrieved and processed.
++ */
 const getCommoditysByTag = async () => {
   console.log('active', active.value)
   console.log('active', refreshing.value)
@@ -238,7 +305,7 @@ const getCommoditysByTag = async () => {
   }
 }
 
-const getAdvertise = async () => {
+const getSlideshow = async () => {
   await client
     .request(
       readItems('slideshow_db', {
@@ -250,10 +317,21 @@ const getAdvertise = async () => {
       })
     )
     .then((res: any) => {
-      images.push(...res)
+      slideshowImages.push(...res)
     })
 }
 
+/**
++     * Retrieves the default commodity from the 'commodity_db' table based on the current page and active value.
++     * Logs the default page number to the console.
++     * Fetches the commodities with the status 'published' and tags '推荐' or '官方'.
++     * If the length of commoditsTag is greater than or equal to 10, appends the retrieved commodities to the existing ones.
++     * Otherwise, assigns the retrieved commodities to commoditsTag.
++     * If the length of the retrieved commodities is less than 10, sets finished to true.
++     * Sets loading to false.
++     *
++     * @return {Promise<void>} - A promise that resolves when the default commodity is retrieved and processed.
++     */
 const getDefaultCommodity = async () => {
   console.log('default page: ', page.value[active.value] + 1)
   // 获取推荐商品
@@ -304,16 +382,68 @@ const getDefaultCommodity = async () => {
     })
 }
 
+/**
++ * Navigates to the commodity page with the given ID as a query parameter.
++ *
++ * @param {number} id - The ID of the commodity.
++ * @return {void} This function does not return a value.
++ */
 const goCommodity = (id: number) => {
-  router.push({
-    name: 'commodity',
-    query: {
-      id
-    }
-  })
+  router.push({ name: 'commodity', query: { id: id } })
 }
 
-const getNotification = async () => {}
+/**
++ * Retrieves the latest announcement from the server and displays it in a modal.
++ *
++ * @return {Promise<void>} A promise that resolves when the announcement is retrieved and displayed.
++ */
+const getAnnouncement = async () => {
+  await client
+    .request(
+      readItems('announcement_db', {
+        limit: 1
+      })
+    )
+    .then((res: any) => {
+      Object.assign(announcementContent, res[0]) // res
+      announcementShow.value = true
+    })
+}
 
-const getPopUpAd = async () => {}
+/**
++ * Retrieves the pop-up advertisement from the server.
++ *
++ * @return {Promise<void>} A promise that resolves when the advertisement is retrieved.
++ */
+const getPopUpAd = async () => {
+  await client
+    .request(
+      readItems('advertising', {
+        limit: 1
+      })
+    )
+    .then((res: any) => {
+      if (res.length > 0) {
+        Object.assign(popUpAd, res[0])
+        popUpAdShow.value = true
+      }
+      //images.push(...res)
+    })
+}
 </script>
+
+<style lang="scss" scoped>
+.container {
+  width: 100%; /* 设置容器宽度 */
+  margin: 0 auto; /* 居中显示 */
+  //border: 1px solid #ccc; /* 边框样式，可选 */
+  //padding: 10px; /* 内边距，可选 */
+}
+
+.container img {
+  max-width: 100%; /* 让图片宽度自适应容器 */
+  height: auto; /* 保持原始宽高比例 */
+  display: block; /* 去除图片默认的间距 */
+  margin: 0 auto; /* 图片水平居中 */
+}
+</style>
