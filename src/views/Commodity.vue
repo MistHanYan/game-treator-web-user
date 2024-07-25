@@ -6,69 +6,69 @@
       <van-nav-bar title="标题" left-text="返回" left-arrow @click-left="onClickLeft" />
     </template>
     <template #body>
-      
-          <van-swipe  loop="false" lazy-render>
-             
-          <van-swipe-item v-for="image in commodity.imgs" :key="image">
-            <div class="container">
-              <img 
-          :src="'http://localhost/assets/'+image.directus_files_id" 
-          alt="商品图片"/>
-            </div>
+      <van-swipe :loop="false" lazy-render>
+        <van-swipe-item v-for="(image, index) in commodityInId.imgs" :key="index">
+          <div class="container">
+            <img :src="'http://localhost/assets/' + image.directus_files_id" alt="商品图片" />
+          </div>
         </van-swipe-item>
       </van-swipe>
-     
+
       <van-row>
-        <van-col span="24">
-          <div>{{ commodity.name }}</div>
-          <div>{{ commodity.tag }}</div>
-          <div>{{ commodity.tag_1 }}</div>
-          <div>{{ commodity.tag_2 }}</div>
-          <div>¥{{ commodity.price }}</div>
+        <van-col span="12">
+          <van-row>
+            <van-col span="24">
+              <div class="price">¥ {{ commodityInId.price }}</div>
+            </van-col>
+            <van-col span="24">
+              <div>{{ commodityInId.name }}</div>
+              <van-tag round type="primary">{{ commodityInId.tag }}</van-tag>
+              <van-tag round type="primary">{{ commodityInId.tag_1 }}</van-tag>
+              <van-tag round type="primary">{{ commodityInId.tag_2 }}</van-tag>
+            </van-col>
+          </van-row>
         </van-col>
+        <van-col> </van-col>
         <van-col span="24">
-        <div>
-          {{ commodity.describe }}
-        </div>
+          <div>{{ commodityInId.describe }}</div>
         </van-col>
       </van-row>
     </template>
     <template #foot>
-      <van-submit-bar :price="commodity.price*100" button-text="购买" @submit="onSubmit" />
+      <van-submit-bar :price="commodityInId.price * 100" button-text="购买" @submit="onSubmit" />
     </template>
   </login-layout>
 </template>
 <script setup lang="ts" name="Commodity">
-import { onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive } from 'vue'
 import { LoginLayout } from '@/components/YuLayout'
 import router from '@/router'
-import { createDirectus, readItems, rest } from '@directus/sdk'
 import { useRoute } from 'vue-router'
+import type { commodity } from '@/types/commodity/commodity'
+import { getCommodityById } from '@/apis/get/get-commodity'
 
-const commodity = reactive({})
+const commodityInId = reactive<commodity>({
+  id: 0,
+  name: '',
+  price: 0,
+  describe: '',
+  tag: '',
+  status: '',
+  user_create: '',
+  date_create: '',
+  imgs: [],
+  img: '',
+  game_classified: undefined,
+  tag_1: '',
+  tag_2: ''
+})
 
-const directus = createDirectus('http://localhost').with(rest())
 const route = useRoute()
 
 onMounted(() => {
-  getCommodity()
+  getCommodityById(route.query.id, commodityInId)
 })
 
-const getCommodity = async () => {
-  console.log(route.query.id)
-  await directus.request(
-    readItems('commodity_db', {
-      fields: ['*', 'imgs.*'],
-      filter: {
-        id: {
-          _eq: route.query.id
-        }
-      }
-    })
-  ).then((res) => {
-      Object.assign(commodity, res[0])
-    })
-}
 const onSubmit = () => {
   router.push({
     name: 'order'
@@ -78,7 +78,6 @@ const onSubmit = () => {
 const onClickLeft = () => {
   router.back()
 }
-const addToCollection = () => {}
 </script>
 
 <style lang="scss">
@@ -98,20 +97,32 @@ const addToCollection = () => {}
 // }
 
 .container {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 300px; /* 设置容器高度 */
-        background-color: black;
-        margin: 0 auto;
-        border: 1px solid #ccc; /* 边框样式，可选 */
-    }
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 300px; /* 设置容器高度 */
+  background-color: black;
+  margin: 0 auto;
+  border: 1px solid #ccc; /* 边框样式，可选 */
+}
 
-    .container img {
-        max-width: 100%;
-        height: auto;
-        display: block;
-        object-fit: contain; 
-        max-height: 100%;  
-    }
+.container img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  object-fit: contain;
+  max-height: 100%;
+}
+
+.price {
+  color: red;
+  font-size: 30px;
+  font-weight: bold;
+  margin-bottom: 10px;
+
+  span {
+    font-size: 14px;
+    text-decoration: line-through;
+  }
+}
 </style>

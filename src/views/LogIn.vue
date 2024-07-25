@@ -93,7 +93,7 @@ const onSubmit = async (values: any) => {
     })
     //const { token } = data
 
-    await router.push('/home')
+    await router.push('/recommend')
   } catch (e) {
     showFailToast('登录失败，请稍后再试...')
   }
