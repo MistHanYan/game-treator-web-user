@@ -123,7 +123,6 @@ const router = createRouter({
       // which is lazy-loaded when the route is visited.
       component: () => import('@/views/Commodity.vue'),
       name: 'commodity',
-      props: true
     },
     {
       path: '/message',
@@ -132,7 +131,6 @@ const router = createRouter({
       // which is lazy-loaded when the route is visited.
       name: 'message',
       component: () => import('@/views/message/Message.vue'),
-      props: true
     }
   ]
 })
