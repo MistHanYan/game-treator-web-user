@@ -52,6 +52,18 @@
         <van-picker :columns="columns" @confirm="onConfirm" @cancel="showPicker = false" />
       </van-popup>
       <van-field
+        v-model="result"
+        is-link
+        readonly
+        name="game_classified"
+        label="游戏账号"
+        placeholder="点击选择游戏账号"
+        @click="showPicker = true"
+      />
+      <van-popup v-model:show="showPicker" position="bottom">
+        <van-picker :columns="columns" @confirm="onConfirm" @cancel="showPicker = false" />
+      </van-popup>
+      <van-field
         v-model="number"
         type="number"
         label="售价(元)"
@@ -113,7 +125,7 @@ const tag_1 = ref<string>('')
 const tag_2 = ref<string>('')
 const describe = ref<string>('')
 const imgs = reactive<any[]>([])
-const imgsResult = reactive<{directus_files_id: string}[]>([])
+const imgsResult = reactive<{ directus_files_id: string }[]>([])
 
 onMounted(() => {
   getGameOptions(columns)
@@ -142,8 +154,11 @@ const afterRead = (file: any) => {
   setTimeout(async () => {
     try {
       await uploadCommodityImg(file.file, imgsResult)
-      console.log("imgsResult: "+ imgsResult)
-      imgs.push({url: 'http://localhost/assets/' + imgsResult[imgsResult.length - 1].directus_files_id, isImage: true})
+      console.log('imgsResult: ' + imgsResult)
+      imgs.push({
+        url: 'http://localhost/assets/' + imgsResult[imgsResult.length - 1].directus_files_id,
+        isImage: true
+      })
       file.status = 'success'
       file.message = '上传成功'
     } catch (e) {
@@ -154,7 +169,7 @@ const afterRead = (file: any) => {
   }, 1000)
 }
 
-const onSubmit = () => {
+const onSubmit = async () => {
   if (name.value === '' || number.value === undefined || price.value === 0) {
     showDialog({ message: '请检查并填写必填项' })
     return
@@ -170,12 +185,11 @@ const onSubmit = () => {
     tag_1: tag_1.value,
     tag_2: tag_2.value,
     status: 'published',
-    imgs: imgsResult,// TODO: 改格式
+    imgs: imgsResult, // TODO: 改格式
     game_classified: columns[columns.findIndex((item) => item.text === result.value)].value,
     promotion: promotion.value
   }
-
-  addToCommodityDB(commodity)
+  await addToCommodityDB(commodity)
 }
 const onOversize = () => {
   showDialog({ message: '图片不能超过3M' })

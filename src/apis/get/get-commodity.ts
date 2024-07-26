@@ -150,24 +150,35 @@ export const getCommodityById = async (id: any, commodityInId: any) => {
 }
 
 export const getOrderById = async (id: any) => {
-
-    try {
-        const response = await fetch("http://localhost:7777/pay/generate/order?id=" + id, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error('Network response was not ok.');
+  await client
+    .request(
+      readItems('order_db', {
+        fields: ['*', 'imgs.*'],
+        filter: {
+          id: {
+            _eq: id
+          }
         }
-
-        const data = await response.json();
-        return data.data;
-    } catch (error) {
-        console.error('Error fetching data:', error);
-        return null;
-    }
+      })
+    )
+    .then((res) => {
+      Object.assign(id, res[0])
+    })
 }
 
+export const getGameAccount = async (account: any) => {
+  await client
+    .request(
+      readItems('game_account_db', {
+        fields: ['*', 'imgs.*'],
+        filter: {
+          id: {
+            _eq: account
+          }
+        }
+      })
+    )
+    .then((res) => {
+      Object.assign(account, res[0])
+    })
+}

@@ -18,19 +18,24 @@
         <van-col span="12">
           <van-row>
             <van-col span="24">
-              <div class="price">¥ {{ commodityInId.price }}</div>
+              <div class="price">
+                <span>¥</span>
+                {{ commodityInId.price }}
+              </div>
             </van-col>
             <van-col span="24">
-              <div>{{ commodityInId.name }}</div>
-              <van-tag round type="primary">{{ commodityInId.tag }}</van-tag>
-              <van-tag round type="primary">{{ commodityInId.tag_1 }}</van-tag>
-              <van-tag round type="primary">{{ commodityInId.tag_2 }}</van-tag>
+              <div>
+                {{ commodityInId.name }}
+                <van-tag round type="primary">{{ commodityInId.tag }}</van-tag>
+                <van-tag round type="primary">{{ commodityInId.tag_1 }}</van-tag>
+                <van-tag round type="primary">{{ commodityInId.tag_2 }}</van-tag>
+              </div>
             </van-col>
           </van-row>
         </van-col>
         <van-col> </van-col>
         <van-col span="24">
-          <div>{{ commodityInId.describe }}</div>
+          <div style="font-size: 15px; color: #666">{{ commodityInId.describe }}</div>
         </van-col>
       </van-row>
     </template>
@@ -46,6 +51,7 @@ import router from '@/router'
 import { useRoute } from 'vue-router'
 import type { commodity } from '@/types/commodity/commodity'
 import { getCommodityById } from '@/apis/get/get-commodity'
+import { getGeneratedOrder } from '@/apis/post/add-commodity'
 
 const commodityInId = reactive<commodity>({
   id: 0,
@@ -70,12 +76,8 @@ onMounted(() => {
 })
 
 const onSubmit = () => {
-  getOrder(commodityInId.id)
-  router.push({
-    name: 'order',
-    query: {
-    id: commodityInId.id
-  }})
+  //getGeneratedOrder(commodityInId.id)
+  router.push('/order')
 }
 
 const onClickLeft = () => {

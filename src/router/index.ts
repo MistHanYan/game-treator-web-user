@@ -5,15 +5,15 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      component: () => import('@/views/LogIn.vue')
+      component: () => import('@/views/sys/LogIn.vue')
     },
     {
       path: '/login',
-      component: () => import('@/views/LogIn.vue')
+      component: () => import('@/views/sys/LogIn.vue')
     },
     {
       path: '/sign-in',
-      component: () => import('@/views/SignIn.vue')
+      component: () => import('@/views/sys/SignIn.vue')
     },
     {
       path: '/about',
@@ -21,7 +21,7 @@ const router = createRouter({
       // route level code-splitting
       // this generates a separate chunk (About.[hash].js) for this route
       // which is lazy-loaded when the route is visited.
-      component: () => import('@/views/About.vue')
+      component: () => import('@/views/sys/About.vue')
     },
 
     {
@@ -30,7 +30,7 @@ const router = createRouter({
       // route level code-splitting
       // this generates a separate chunk (About.[hash].js) for this route
       // which is lazy-loaded when the route is visited.
-      component: () => import('@/views/user/User.vue'),
+      component: () => import('@/views/home/User.vue'),
       children: [
         {
           path: '/user-information',
@@ -80,7 +80,7 @@ const router = createRouter({
       // route level code-splitting
       // this generates a separate chunk (About.[hash].js) for this route
       // which is lazy-loaded when the route is visited.
-      component: () => import('@/views/Issue.vue')
+      component: () => import('@/views/home/Issue.vue')
     },
     {
       path: '/recommend',
@@ -88,8 +88,7 @@ const router = createRouter({
       // route level code-splitting
       // this generates a separate chunk (About.[hash].js) for this route
       // which is lazy-loaded when the route is visited.
-      component: () => import('@/views/Recommend.vue'),
-      props: true
+      component: () => import('@/views/home/Recommend.vue')
     },
     {
       path: '/message',
@@ -97,7 +96,7 @@ const router = createRouter({
       // route level code-splitting
       // this generates a separate chunk (About.[hash].js) for this route
       // which is lazy-loaded when the route is visited.
-      component: () => import('@/views/message/Message.vue'),
+      component: () => import('@/views/home/Message.vue'),
       children: [
         {
           path: '/dialog-box',
@@ -114,7 +113,8 @@ const router = createRouter({
       // route level code-splitting
       // this generates a separate chunk (About.[hash].js) for this route
       // which is lazy-loaded when the route is visited.
-      component: () => import('@/views/Issue.vue')
+      name: 'issue',
+      component: () => import('@/views/home/Issue.vue')
     },
     {
       path: '/commodity',
@@ -122,17 +122,15 @@ const router = createRouter({
       // this generates a separate chunk (About.[hash].js) for this route
       // which is lazy-loaded when the route is visited.
       component: () => import('@/views/Commodity.vue'),
-      name: 'commodity',
-      children: [
-        {
-          path: '/order?id=:id',
-          name: 'order',
-          // route level code-splitting
-          // this generates a separate chunk (About.[hash].js) for this route
-          // which is lazy-loaded when the route is visited.
-          component: () => import('@/views/Order.vue')
-        }
-      ]
+      name: 'commodity'
+    },
+    {
+      path: '/order',
+      name: 'order',
+      // route level code-splitting
+      // this generates a separate chunk (About.[hash].js) for this route
+      // which is lazy-loaded when the route is visited.
+      component: () => import('@/views/Order.vue')
     },
     {
       path: '/message',
@@ -140,7 +138,7 @@ const router = createRouter({
       // this generates a separate chunk (About.[hash].js) for this route
       // which is lazy-loaded when the route is visited.
       name: 'message',
-      component: () => import('@/views/message/Message.vue'),
+      component: () => import('@/views/home/Message.vue')
     }
   ]
 })

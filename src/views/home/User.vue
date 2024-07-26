@@ -4,9 +4,12 @@
   <div style="width: 100%; height: 210px; background-color: aquamarine">
     <div></div>
   </div>
-  <van-coupon-cell :coupons="coupons" :chosen-coupon="chosenCoupon" @click="showList = true" />
-  <van-coupon-cell :coupons="coupons" :chosen-coupon="chosenCoupon" @click="showList = true" />
-  <van-coupon-cell :coupons="coupons" :chosen-coupon="chosenCoupon" @click="showList = true" />
+  <van-cell-group>
+    <van-cell title="单元格" value="内容" />
+    <van-cell title="单元格" value="内容" />
+    <van-cell title="单元格" value="内容" />
+    <van-cell title="单元格" value="内容" />
+  </van-cell-group>
   <!-- 优惠券列表 -->
 </template>
 <script setup lang="ts" name="User"></script>
