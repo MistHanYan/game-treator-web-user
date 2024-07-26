@@ -27,7 +27,7 @@ export interface tag {
 
 export interface column {
   text: string
-  value: string
+  value: number
 }
 
 export interface SelectedOptions {

@@ -133,7 +133,6 @@ export const getDefaultCommodity = async (
 }
 
 export const getCommodityById = async (id: any, commodityInId: any) => {
-  console.log(id)
   await client
     .request(
       readItems('commodity_db', {
@@ -149,3 +148,26 @@ export const getCommodityById = async (id: any, commodityInId: any) => {
       Object.assign(commodityInId, res[0])
     })
 }
+
+export const getOrderById = async (id: any) => {
+
+    try {
+        const response = await fetch("http://localhost:7777/pay/generate/order?id=" + id, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Network response was not ok.');
+        }
+
+        const data = await response.json();
+        return data.data;
+    } catch (error) {
+        console.error('Error fetching data:', error);
+        return null;
+    }
+}
+

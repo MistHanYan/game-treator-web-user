@@ -70,9 +70,12 @@ onMounted(() => {
 })
 
 const onSubmit = () => {
+  getOrder(commodityInId.id)
   router.push({
-    name: 'order'
-  })
+    name: 'order',
+    query: {
+    id: commodityInId.id
+  }})
 }
 
 const onClickLeft = () => {

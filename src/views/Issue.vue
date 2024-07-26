@@ -60,7 +60,7 @@
       />
       <div style="display: flex; justify-content: center">
         <van-uploader
-          v-model:file-list="imgs"
+          v-model="imgs"
           multiple
           :max-size="3000 * 1024"
           @oversize="onOversize"
@@ -102,7 +102,7 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const showPicker = ref<boolean>(false)
-const columns = reactive<Array<column>>([])
+const columns = reactive<column[]>([])
 const result = ref('')
 const promotion = ref<string>('2')
 const name = ref<string>('')
@@ -112,8 +112,8 @@ const price = ref<number>(0)
 const tag_1 = ref<string>('')
 const tag_2 = ref<string>('')
 const describe = ref<string>('')
-const imgs = reactive<Array<any>>([])
-const imgsResult = reactive<Array<any>>([])
+const imgs = reactive<any[]>([])
+const imgsResult = reactive<{directus_files_id: string}[]>([])
 
 onMounted(() => {
   getGameOptions(columns)
@@ -136,16 +136,15 @@ const onConfirm = ({ selectedOptions }: { selectedOptions: SelectedOptions[] }):
 }
 
 const afterRead = (file: any) => {
-  console.log(file)
   file.status = 'uploading'
   file.message = '上传中...'
 
-  setTimeout(() => {
+  setTimeout(async () => {
     try {
-      uploadCommodityImg(file.file, imgsResult)
-      console.log(imgsResult)
-      file.url = 'http://localhost/assets/' + imgsResult[imgs[imgs.length - 1]].id
-      file.status = 'failed'
+      await uploadCommodityImg(file.file, imgsResult)
+      console.log("imgsResult: "+ imgsResult)
+      imgs.push({url: 'http://localhost/assets/' + imgsResult[imgsResult.length - 1].directus_files_id, isImage: true})
+      file.status = 'success'
       file.message = '上传成功'
     } catch (e) {
       console.log(e)
@@ -171,8 +170,8 @@ const onSubmit = () => {
     tag_1: tag_1.value,
     tag_2: tag_2.value,
     status: 'published',
-    imgs: imgsResult,
-    game_classified: columns.find((result) => result.text === result.value)?.value,
+    imgs: imgsResult,// TODO: 改格式
+    game_classified: columns[columns.findIndex((item) => item.text === result.value)].value,
     promotion: promotion.value
   }
 

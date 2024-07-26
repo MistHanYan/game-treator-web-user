@@ -41,7 +41,7 @@ const router = createRouter({
           component: () => import('@/views/user/UserInformation.vue')
         },
         {
-          path: 'user-game-account',
+          path: '/user-game-account',
           name: 'user-game-account',
           // route level code-splitting
           // this generates a separate chunk (About.[hash].js) for this route
@@ -49,7 +49,7 @@ const router = createRouter({
           component: () => import('@/views/user/UserGameAccount.vue')
         },
         {
-          path: 'user-order',
+          path: '/user-order',
           name: 'user-order',
           // route level code-splitting
           // this generates a separate chunk (About.[hash].js) for this route
@@ -57,7 +57,7 @@ const router = createRouter({
           component: () => import('@/views/user/UserOrder.vue')
         },
         {
-          path: 'user-commodity',
+          path: '/user-commodity',
           name: 'user-commodity',
           // route level code-splitting
           // this generates a separate chunk (About.[hash].js) for this route
@@ -65,7 +65,7 @@ const router = createRouter({
           component: () => import('@/views/user/UserCommodity.vue')
         },
         {
-          path: 'user-favorites',
+          path: '/user-favorites',
           name: 'user-favorites',
           // route level code-splitting
           // this generates a separate chunk (About.[hash].js) for this route
@@ -100,7 +100,7 @@ const router = createRouter({
       component: () => import('@/views/message/Message.vue'),
       children: [
         {
-          path: 'dialog-box',
+          path: '/dialog-box',
           name: 'dialog-box',
           // route level code-splitting
           // this generates a separate chunk (About.[hash].js) for this route
@@ -123,6 +123,16 @@ const router = createRouter({
       // which is lazy-loaded when the route is visited.
       component: () => import('@/views/Commodity.vue'),
       name: 'commodity',
+      children: [
+        {
+          path: '/order?id=:id',
+          name: 'order',
+          // route level code-splitting
+          // this generates a separate chunk (About.[hash].js) for this route
+          // which is lazy-loaded when the route is visited.
+          component: () => import('@/views/Order.vue')
+        }
+      ]
     },
     {
       path: '/message',
