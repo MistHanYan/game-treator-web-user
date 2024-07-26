@@ -143,7 +143,8 @@ const afterRead = (file: any) => {
   setTimeout(() => {
     try {
       uploadCommodityImg(file.file, imgsResult)
-      file.url = imgsResult[imgs[imgs.length - 1]].url
+      console.log(imgsResult)
+      file.url = 'http://localhost/assets/' + imgsResult[imgs[imgs.length - 1]].id
       file.status = 'failed'
       file.message = '上传成功'
     } catch (e) {
@@ -170,7 +171,7 @@ const onSubmit = () => {
     tag_1: tag_1.value,
     tag_2: tag_2.value,
     status: 'published',
-    imgs: [],
+    imgs: imgsResult,
     game_classified: columns.find((result) => result.text === result.value)?.value,
     promotion: promotion.value
   }
