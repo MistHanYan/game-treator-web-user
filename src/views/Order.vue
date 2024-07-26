@@ -5,9 +5,12 @@
       <div><van-nav-bar title="标题" left-text="返回" left-arrow @click-left="onClickLeft" /></div>
     </template>
     <template #body>
-      <div>
+      <div style="background-color: cyan; top: 0; left: 0">
+        <div style="display: flex; justify-content: center">
+          <h3 style="color: #000">待支付...</h3>
+        </div>
         <div>
-          <van-cell-group>
+          <van-cell-group inset>
             <van-cell title="单元格" value="内容" />
             <van-cell title="单元格" value="内容" />
             <van-cell title="单元格" value="内容" />
@@ -19,6 +22,7 @@
             <van-cell title="单元格" value="内容" />
             <van-cell title="单元格" value="内容"> </van-cell>
           </van-cell-group>
+          <van-button type="primary" block round>块级元素</van-button>
         </div>
       </div>
     </template>
