@@ -1,21 +1,13 @@
 <template>
-  <!-- eslint-disable vue/multi-word-component-names -->
-  <RouterView />
-
-  <van-tabbar route>
-    <van-tabbar-item replace to="/recommend" icon="home-o">主页</van-tabbar-item>
-    <van-tabbar-item replace to="/issue" icon="add-o">发布商品</van-tabbar-item>
-    <van-tabbar-item replace to="/message" icon="home-o">消息</van-tabbar-item>
-    <van-tabbar-item replace to="/user" icon="user-o">我的</van-tabbar-item>
-  </van-tabbar>
+  <Home/>
 </template>
 
 <script setup lang="ts" name="App">
 import router from '@/router/index.js'
 import { getCookie } from '@/utils/Cookie.js'
-
+import Home from '@/views/Home.vue'
 if (getCookie('directus_session_token') != null) {
-  router.push('/recommend')
+  router.push('/home')
 } else {
   router.push('/login')
 }

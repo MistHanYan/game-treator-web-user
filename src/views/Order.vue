@@ -2,31 +2,33 @@
 <template>
   <login-layout>
     <template #header>
-      <div><van-nav-bar title="标题" left-text="返回" left-arrow @click-left="onClickLeft" /></div>
+      <div><van-nav-bar title="确认订单" left-text="返回" left-arrow @click-left="onClickLeft" /></div>
     </template>
     <template #body>
-      <div style="background-color: cyan; top: 0; left: 0">
+      <div style="background-color: cyan; top: 0; left: 0 ; width: 100%; height: 100vh">
         <div style="display: flex; justify-content: center">
-          <h3 style="color: #000">待支付...</h3>
+          <h3 style="color: #000"></h3>
         </div>
         <div>
           <van-cell-group inset>
+            <van-cell title="订单编号" value="内容" />
+            <van-cell title="商品名称" value="内容" />
+            <van-cell title="商品标签" value="内容" />
+            <van-cell title="商品描述" value="内容" />
+            <van-cell title="商品图片" value="内容" />
+            <van-cell title="下单时间" value="内容" />
+            <van-cell title="支付时间" value="内容" />
+            <van-cell title="收货账号" value="内容" />
             <van-cell title="单元格" value="内容" />
-            <van-cell title="单元格" value="内容" />
-            <van-cell title="单元格" value="内容" />
-            <van-cell title="单元格" value="内容" />
-            <van-cell title="单元格" value="内容" />
-            <van-cell title="单元格" value="内容" />
-            <van-cell title="单元格" value="内容" />
-            <van-cell title="单元格" value="内容" />
-            <van-cell title="单元格" value="内容" />
-            <van-cell title="单元格" value="内容"> </van-cell>
+            <van-cell title="价格" value="内容"> </van-cell>
           </van-cell-group>
-          <van-button type="primary" block round>块级元素</van-button>
         </div>
       </div>
     </template>
-    <template #foot> </template>
+    <template #foot><div>
+        <van-submit-bar :price="3050" button-text="支付订单" @submit="onSubmit" 
+        button-type="primary"/>
+    </div> </template>
   </login-layout>
 </template>
 <script setup lang="ts" name="Order">
