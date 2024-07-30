@@ -6,7 +6,7 @@ const client = createDirectus('http://localhost').with(rest())
 + *
 + * @return {Promise<void>} A promise that resolves when the announcement is retrieved and displayed.
 + */
-export const getAnnouncement = async (announcementContent: any, announcementShow: any) => {
+export const getAnnouncement = async (announcementContent: any) => {
   await client
     .request(
       readItems('announcement_db', {
@@ -15,7 +15,6 @@ export const getAnnouncement = async (announcementContent: any, announcementShow
     )
     .then((res: any) => {
       Object.assign(announcementContent, res[0]) // res
-      announcementShow.value = true
     })
 }
 
@@ -24,11 +23,10 @@ export const getAnnouncement = async (announcementContent: any, announcementShow
   + *
   + * @return {Promise<void>} A promise that resolves when the advertisement is retrieved.
   + */
-export const getPopUpAd = async (popUpAd: any, popUpAdShow: any) => {
+export const getPopUpAd = async (popUpAd: any) => {
   await client.request(readItems('advertising', {})).then((res: any) => {
     if (res.length > 0) {
       Object.assign(popUpAd, res[0])
-      popUpAdShow.value = true
     }
     //images.push(...res)
   })

@@ -1,3 +1,4 @@
+import router from '@/router'
 import { getCookie } from '@/utils/Cookie'
 import { createDirectus, createItems, rest, uploadFiles } from '@directus/sdk'
 import { showDialog } from 'vant'
@@ -29,24 +30,34 @@ export const uploadCommodityImg = async (img: any, imgsResult: any) => {
   })
 }
 
-export const getGeneratedOrder = async (id: any) => {
+export const getGeneratedOrder = async (commodity_id: any, receiving_account_id: any) => {
   try {
-    const response = await fetch('http://localhost:7777/pay/generate/order?id=' + id, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: 'Bearer ' + getCookie('directus_session_token')
+    const response = await fetch(
+      '/order/generate?commodity_id=' +
+        commodity_id +
+        '&receiving_account_id=' +
+        receiving_account_id,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + getCookie('directus_session_token')
+        }
       }
-    })
+    )
 
     if (!response.ok) {
       throw new Error('Network response was not ok.')
     }
 
     const data = await response.json()
-    return data.data
+    await router.push({
+      name: 'order',
+      query: {
+        order_id: data.data.id
+      }
+    })
   } catch (error) {
     console.error('Error fetching data:', error)
-    return null
   }
 }

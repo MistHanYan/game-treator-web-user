@@ -1,55 +1,79 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <!-- eslint-disable vue/valid-template-root -->
 <template>
-  <login-layout>
-    <template #header>
-      <van-nav-bar title="标题" left-text="返回" left-arrow @click-left="onClickLeft" />
-    </template>
-    <template #body>
+  <div>
+    <div>
+      <van-nav-bar left-text="返回" left-arrow @click-left="onClickLeft" />
+    </div>
+    <div>
       <van-swipe :loop="false" lazy-render>
         <van-swipe-item v-for="(image, index) in commodityInId.imgs" :key="index">
-          <div class="container">
-            <img :src="'http://localhost/assets/' + image.directus_files_id" alt="商品图片" />
+          <div class="commodity-container">
+            <img
+              :src="'http://localhost/assets/' + image.directus_files_id"
+              alt="商品图片"
+              class="commodity-container-img"
+            />
           </div>
         </van-swipe-item>
       </van-swipe>
 
-      <van-row>
-        <van-col span="12">
-          <van-row>
-            <van-col span="24">
-              <div class="price">
-                <span>¥</span>
-                {{ commodityInId.price }}
-              </div>
-            </van-col>
-            <van-col span="24">
-              <div>
-                {{ commodityInId.name }}
-                <van-tag round type="primary">{{ commodityInId.tag }}</van-tag>
-                <van-tag round type="primary">{{ commodityInId.tag_1 }}</van-tag>
-                <van-tag round type="primary">{{ commodityInId.tag_2 }}</van-tag>
-              </div>
-            </van-col>
-          </van-row>
-        </van-col>
-        <van-col> </van-col>
-        <van-col span="24">
-          <div style="font-size: 15px; color: #666">{{ commodityInId.describe }}</div>
-        </van-col>
-      </van-row>
-    </template>
-    <template #foot>
+      <div
+        style="
+          display: flex;
+          width: 100%;
+          flex-direction: row;
+          justify-content: space-between;
+          width: 100%;
+          align-items: center;
+          border-bottom: 1px solid #ccc;
+        "
+      >
+        <div class="price">
+          <div style="font-size: 0.8em">售价：</div>
+          {{ commodityInId.price }}
+          <span>¥</span>
+        </div>
+        <div style="display: flex; flex-direction: column; margin-top: 15px; margin-right: 15px">
+          <div>
+            <van-icon name="star-o" />
+          </div>
+          <div style="font-size: 0.45em">收藏</div>
+        </div>
+      </div>
+
+      <div
+        style="
+          display: flex;
+          justify-content: space-between;
+          margin-top: 10px;
+          border-bottom: 1px solid #ccc;
+          padding-bottom: 10px;
+          margin-bottom: 10px;
+        "
+      >
+        <div style="margin-left: 10px">
+          {{ commodityInId.name }}
+        </div>
+        <div>
+          <van-tag type="primary" round>{{ commodityInId.tag }}</van-tag>
+          <van-tag type="primary" round>{{ commodityInId.tag_1 }}</van-tag>
+          <van-tag type="primary" round>{{ commodityInId.tag_2 }}</van-tag>
+        </div>
+      </div>
+
+      <div class="describe">{{ commodityInId.describe }}</div>
+    </div>
+    <div>
       <van-submit-bar :price="commodityInId.price * 100" button-text="购买" @submit="onSubmit" />
-    </template>
-  </login-layout>
+    </div>
+  </div>
 </template>
 <script setup lang="ts" name="Commodity">
 import { onMounted, reactive } from 'vue'
-import { LoginLayout } from '@/components/YuLayout'
 import router from '@/router'
 import { useRoute } from 'vue-router'
-import type { commodity } from '@/types/commodity/commodity'
+import type { commodity } from '@/types/commodity'
 import { getCommodityById } from '@/apis/get/get-commodity'
 import { getGeneratedOrder } from '@/apis/post/add-commodity'
 
@@ -63,10 +87,11 @@ const commodityInId = reactive<commodity>({
   user_create: '',
   date_create: '',
   imgs: [],
-  img: '',
-  game_classified: undefined,
+  game_classified: null,
   tag_1: '',
-  tag_2: ''
+  tag_2: '',
+  user_account: 0,
+  promotion: ''
 })
 
 const route = useRoute()
@@ -75,9 +100,8 @@ onMounted(() => {
   getCommodityById(route.query.id, commodityInId)
 })
 
-const onSubmit = () => {
-  //getGeneratedOrder(commodityInId.id)
-  router.push('/order')
+const onSubmit = async () => {
+  await getGeneratedOrder(commodityInId.id, commodityInId.user_account)
 }
 
 const onClickLeft = () => {
@@ -86,22 +110,7 @@ const onClickLeft = () => {
 </script>
 
 <style lang="scss">
-// .container {
-//   width: 100%;
-//   height: 45%; /* 设置容器宽度 */
-//   margin: 0 auto; /* 居中显示 */
-//   //border: 1px solid #ccc; /* 边框样式，可选 */
-//   //padding: 10px; /* 内边距，可选 */
-// }
-
-// img {
-//   max-width: 100%; /* 让图片宽度自适应容器 */
-//   height: auto; /* 保持原始宽高比例 */
-//   display: block; /* 去除图片默认的间距 */
-//   margin: 0 auto; /* 图片水平居中 */
-// }
-
-.container {
+.commodity-container {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -111,7 +120,7 @@ const onClickLeft = () => {
   border: 1px solid #ccc; /* 边框样式，可选 */
 }
 
-.container img {
+.commodity-container-img {
   max-width: 100%;
   height: auto;
   display: block;
@@ -123,11 +132,27 @@ const onClickLeft = () => {
   color: red;
   font-size: 30px;
   font-weight: bold;
-  margin-bottom: 10px;
-
+  margin-bottom: 5px;
+  margin-top: 15px;
   span {
     font-size: 14px;
     text-decoration: line-through;
   }
+  display: flex;
+  justify-content: center;
+}
+
+.describe {
+  margin: 10px, 10px, 10px, 10px;
+  border: 1px solid #ccc;
+  padding: 10px;
+  border-radius: 10px;
+  font-size: 15px;
+  color: #666;
+  margin-top: 20px;
+  margin-left: 15px;
+  margin-right: 15px;
+  background-color: #f5f5f5;
+  min-height: 200px;
 }
 </style>

@@ -48,6 +48,14 @@ export default defineConfig({
           'Content-Type': 'image/jpeg, image/png, image/gif, image/jpg'
         },
         changeOrigin: true
+      },
+      '/order': {
+        target: 'http://mist-home.top:7777',
+        changeOrigin: true
+      },
+      '/pay': {
+        target: 'http://mist-home.top:7777',
+        changeOrigin: true
       }
     }
   },

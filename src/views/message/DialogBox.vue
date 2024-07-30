@@ -48,4 +48,28 @@
     </div>
   </template>
 </template>
-<script setup lang="ts" name="Message"></script>
+<script setup lang="ts" name="Message">
+import { ref } from 'vue'
+
+const editorRef = ref()
+const uploadImgRef = ref()
+const editorText = ref('')
+const showPopover = ref(false)
+const handleKeydown = (e: KeyboardEvent) => {
+  if (e.key === 'Enter') {
+    handleSubmit()
+  }
+}
+
+const handleClear = () => {
+  editorText.value = ''
+}
+
+function handleSubmit() {
+  throw new Error('Function not implemented.')
+}
+
+function handleUploadImage() {
+  throw new Error('Function not implemented.')
+}
+</script>

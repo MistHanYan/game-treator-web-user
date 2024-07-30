@@ -1,13 +1,13 @@
 <!-- eslint-disable @typescript-eslint/no-unused-vars -->
 <!-- eslint-disable @typescript-eslint/no-unused-vars -->
 <template>
-  <login-layout>
-    <template #header>
+  <div>
+    <div>
       <div class="logo-container">
         <img :src="logo" alt="" />
       </div>
-    </template>
-    <template #body>
+    </div>
+    <div>
       <van-form label-width="0" @submit="onSubmit">
         <van-cell-group inset>
           <van-field
@@ -48,7 +48,7 @@
           </div>
         </div>
       </van-form>
-    </template>
+    </div>
 
     <!-- <template #foot>
       <div>
@@ -61,18 +61,18 @@
         </div>
       </div>
     </template> -->
-  </login-layout>
+  </div>
 </template>
 
 <script setup lang="ts" name="App">
 import { reactive } from 'vue'
 //import { validEmail } from '@/utils/validate.js'
-import { LoginLayout } from '@/components/YuLayout'
 import { useRouter } from 'vue-router'
 import { showFailToast } from 'vant'
 import logo from '@/assets/imgs/logo.jpg'
 import { createDirectus, rest, authentication } from '@directus/sdk'
 import { setCookie } from '@/utils/Cookie'
+import { useUserStore } from '@/stores/useUserStore'
 
 const router = useRouter()
 
@@ -81,21 +81,22 @@ const formState = reactive({
   password: ''
 })
 
+const useInfo = useUserStore()
+
 const onSubmit = async (values: any) => {
   try {
     const client = createDirectus('http://localhost').with(authentication('json')).with(rest())
 
     // login http request
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const result = await client.login(values.username, values.password).then((res: any) => {
+    await client.login(values.username, values.password).then((res: any) => {
       setCookie('directus_session_token', res.access_token, 7)
       setCookie('refresh_token', res.refresh_token, 7)
     })
     //const { token } = data
-
+    await useInfo.updateUser()
     await router.push('/recommend')
   } catch (e) {
-    showFailToast('登录失败，请稍后再试...')
+    showFailToast('登录失败，请检查账号或密码')
   }
 }
 

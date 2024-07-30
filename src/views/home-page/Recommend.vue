@@ -1,14 +1,14 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
-  <login-layout style="max-height: 100%">
-    <template #header>
+  <div style="max-height: 100%">
+    <div>
       <van-nav-bar title="启帆交易商城">
         <template #right>
           <van-icon name="search" size="18" />
         </template>
       </van-nav-bar>
-    </template>
-    <template #body>
+    </div>
+    <div>
       <van-swipe :autoplay="6000" lazy-render>
         <van-swipe-item v-for="(image, index) in slideshowImages" :key="index">
           <a :href="image.link">
@@ -20,8 +20,8 @@
           </a>
         </van-swipe-item>
       </van-swipe>
-    </template>
-    <template #foot>
+    </div>
+    <div>
       <van-tabs v-model:active="active" swipeable sticky>
         <van-tab v-for="(tag, index) in tags" :key="index" :title="tag.name">
           <van-pull-refresh v-model="refreshing" @refresh="onRefresh">
@@ -58,13 +58,21 @@
           </van-pull-refresh>
         </van-tab>
       </van-tabs>
-    </template>
-  </login-layout>
-  <van-dialog v-model:show="announcementShow" :title="announcementContent.title">
+    </div>
+  </div>
+  <van-dialog
+    v-model:show="sysStore.recordNotice"
+    :title="announcementContent.title"
+    @confirm="announcementConfirm"
+  >
     <p>{{ announcementContent.content }}</p>
   </van-dialog>
 
-  <van-dialog v-model:show="popUpAdShow" :title="popUpAd.theme" show-cancel-button>
+  <van-dialog
+    v-model:show="sysStore.recordPopUpAd"
+    :title="popUpAd.theme"
+    @confirm="popUpAdConfirm"
+  >
     <div class="container">
       <a :href="popUpAd.link">
         <img :src="'http://localhost/assets/' + popUpAd.img" />
@@ -74,13 +82,16 @@
 </template>
 
 <script setup lang="ts" name="User">
-import { LoginLayout } from '@/components/YuLayout'
 import router from '@/router'
 import { onMounted, reactive, ref, watch } from 'vue'
-import { type tag, type slideshow, type advertising, type announcement } from '@/types/sys/page'
-import type { commodity } from '@/types/commodity/commodity'
+import type { advertising } from '@/types/page'
+import type { announcement } from '@/types/page'
+import type { tag } from '@/types/page'
+import type { slideshow } from '@/types/page'
+import type { commodity } from '@/types/commodity'
 import { getAnnouncement, getPopUpAd, getSlideshow, getTags } from '@/apis/get/get-sys'
 import { getCommoditysByTag } from '@/apis/get/get-commodity'
+import { useSysStore } from '@/stores/useSysStore'
 
 const loading = ref<boolean>()
 const finished = ref(false)
@@ -91,25 +102,28 @@ const slideshowImages = reactive<Array<slideshow>>([])
 const commoditsTag = ref<Array<Array<commodity>>>([[]])
 const error = ref<boolean>(false)
 const page = ref<Array<number>>([])
-const announcementShow = ref<boolean>(false)
-const popUpAdShow = ref<boolean>(false)
+
 const popUpAd = reactive<advertising>({
   id: 0,
   theme: '',
   img: '',
   link: ''
 })
+
 const announcementContent = reactive<announcement>({
   id: 0,
   title: '',
   content: ''
 })
 
+const sysStore = useSysStore()
+
 onMounted(() => {
   getSlideshow(slideshowImages)
+  tags.push({ id: 0, name: '推荐', log: '' })
   getTags(tags, commoditsTag, loading, page)
-  getPopUpAd(popUpAd, popUpAdShow)
-  getAnnouncement(announcementContent, announcementShow)
+  getPopUpAd(popUpAd)
+  getAnnouncement(announcementContent)
 })
 
 watch(active, () => {
@@ -159,7 +173,7 @@ const onLoad = async () => {
       }
       loading.value = false
       page.value[active.value] = page.value[active.value] + 1
-    }, 800)
+    }, 1000)
   } else {
     refreshing.value = false
     loading.value = false
@@ -192,6 +206,14 @@ const onRefresh = async () => {
 + */
 const goCommodity = (id: number) => {
   router.push({ name: 'commodity', query: { id: id } })
+}
+
+const announcementConfirm = () => {
+  useSysStore().updateRecordNotice
+}
+
+const popUpAdConfirm = () => {
+  useSysStore().updateRecordPopUpAd
 }
 </script>
 

@@ -1,3 +1,4 @@
+import { getCookie } from '@/utils/Cookie'
 import { createDirectus, readItems, rest } from '@directus/sdk'
 
 const client = createDirectus('http://localhost').with(rest())
@@ -149,11 +150,11 @@ export const getCommodityById = async (id: any, commodityInId: any) => {
     })
 }
 
-export const getOrderById = async (id: any) => {
+export const getOrderById = async (id: any, order: any) => {
   await client
     .request(
       readItems('order_db', {
-        fields: ['*', 'imgs.*'],
+        fields: ['*.*'],
         filter: {
           id: {
             _eq: id
@@ -162,7 +163,8 @@ export const getOrderById = async (id: any) => {
       })
     )
     .then((res) => {
-      Object.assign(id, res[0])
+      Object.assign(order, res[0])
+      console.log(order)
     })
 }
 
@@ -181,4 +183,47 @@ export const getGameAccount = async (account: any) => {
     .then((res) => {
       Object.assign(account, res[0])
     })
+}
+
+export const getGameAccountById = async (order_id: any, pageHTML: any) => {
+  try {
+    const response = await fetch('/pay/ali?order_id=' + order_id, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + getCookie('directus_session_token')
+      }
+    })
+
+    if (!response.ok) {
+      throw new Error('Network response was not ok.')
+    }
+
+    const data = await response.json()
+    pageHTML.value = data.data
+  } catch (error) {
+    console.error('Error fetching data:', error)
+  }
+}
+
+export const getAliPayHTML = async (order_num: any) => {
+  try {
+    const response = await fetch('/pay/ali?order_id=' + order_num, {
+      method: 'GET'
+    })
+
+    if (!response.ok) {
+      throw new Error('Network response was not ok.')
+    }
+
+    const data = await response.text()
+    const div = document.createElement('divform')
+    div.innerHTML = data // data就是接口返回的form 表单字符串
+    document.body.appendChild(div)
+    const len = document.forms.length - 1
+    document.forms[len].setAttribute('target', '_blank') // 新开窗口跳转
+    document.forms[len].submit()
+  } catch (error) {
+    console.error('Error fetching data:', error)
+  }
 }

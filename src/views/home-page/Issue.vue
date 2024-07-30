@@ -107,7 +107,8 @@
 <script setup lang="ts" name="Issue">
 import { getGameOptions } from '@/apis/get/get-sys'
 import { addToCommodityDB, uploadCommodityImg } from '@/apis/post/add-commodity'
-import type { column, SelectedOptions } from '@/types/sys/page'
+import type { column } from '@/types/page'
+import type { SelectedOptions } from '@/types/page'
 import { showDialog } from 'vant'
 import { onMounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
@@ -186,7 +187,8 @@ const onSubmit = async () => {
     tag_2: tag_2.value,
     status: 'published',
     imgs: imgsResult, // TODO: 改格式
-    game_classified: columns[columns.findIndex((item) => item.text === result.value)].value,
+    game_classified:
+      columns[columns.findIndex((item: { text: string }) => item.text === result.value)].value,
     promotion: promotion.value
   }
   await addToCommodityDB(commodity)

@@ -17,4 +17,19 @@
     <van-cell v-for="item in list" :key="item" :title="item" />
   </van-list>
 </template>
-<script setup lang="ts" name="Message"></script>
+<script setup lang="ts" name="Message">
+import { ref } from 'vue';
+
+
+const images = [
+  'https://fastly.jsdelivr.net/npm/@vant/assets/apple-1.jpeg',
+  'https://fastly.jsdelivr.net/npm/@vant/assets/apple-2.jpeg',
+]
+
+const list = ref([])
+const loading = ref(false)
+const finished = ref(false)
+const onLoad = () => {
+    
+}
+</script>
