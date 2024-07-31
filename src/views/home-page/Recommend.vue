@@ -13,7 +13,7 @@
         <van-swipe-item v-for="(image, index) in slideshowImages" :key="index">
           <a :href="image.link">
             <img
-              :src="'http://localhost/assets/' + image.img"
+              :src="'http://mist-home:40067/assets/' + image.img"
               style="max-width: 100%"
               alt="推广图"
             />
@@ -39,7 +39,7 @@
                 :tag="item.tag"
                 :title="item.name"
                 class="goods - card"
-                :thumb="'http://localhost/assets/' + item.imgs[0].directus_files_id"
+                :thumb="'http://mist-home:40067/assets/' + item.imgs[0].directus_files_id"
                 style="min-width: 100%"
                 v-for="(item, index) in commoditsTag[active]"
                 :key="index"
@@ -75,7 +75,7 @@
   >
     <div class="container">
       <a :href="popUpAd.link">
-        <img :src="'http://localhost/assets/' + popUpAd.img" />
+        <img :src="'http://mist-home:40067/assets/' + popUpAd.img" />
       </a>
     </div>
   </van-dialog>

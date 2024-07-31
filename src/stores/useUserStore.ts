@@ -2,6 +2,7 @@ import { reactive } from 'vue'
 import { defineStore } from 'pinia'
 import type { user_information } from '@/types/user-information'
 import { createDirectus, readMe, rest } from '@directus/sdk'
+import { getCookie } from '@/utils/Cookie'
 
 export const useUserStore = defineStore('user_information', () => {
   const user_account = reactive<user_information>({
@@ -34,7 +35,16 @@ export const useUserStore = defineStore('user_information', () => {
   })
 
   async function updateUser() {
-    const client = createDirectus('http://localhost').with(rest())
+    const client = createDirectus('http://mist-home.top:40066').with(
+      rest({
+        onRequest: (request: any) => {
+          request.headers['Authorization'] = 'Bearer ' + getCookie('directus_session_token')
+          request.headers['Access-Control-Allow-Origin'] = '*'
+          request.headers['Content-Type'] = 'application/json'
+          return request
+        }
+      })
+    )
     await client
       .request(
         readMe({

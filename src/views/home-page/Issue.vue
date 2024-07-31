@@ -157,7 +157,7 @@ const afterRead = (file: any) => {
       await uploadCommodityImg(file.file, imgsResult)
       console.log('imgsResult: ' + imgsResult)
       imgs.push({
-        url: 'http://localhost/assets/' + imgsResult[imgsResult.length - 1].directus_files_id,
+        url: 'http://mist-home:40067/assets/' + imgsResult[imgsResult.length - 1].directus_files_id,
         isImage: true
       })
       file.status = 'success'

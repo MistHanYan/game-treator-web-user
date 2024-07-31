@@ -152,7 +152,15 @@ async function onSubmit() {
           throw new Error('未阅读并同意协议')
         })
     }
-    const client = createDirectus('http://localhost').with(rest())
+    const client = createDirectus('http://mist-home.top:40066').with(
+      rest({
+        onRequest: (request: any) => {
+          request.headers['Access-Control-Allow-Origin'] = '*'
+          request.headers['Content-Type'] = 'application/json'
+          return request
+        }
+      })
+    )
     await client.request(
       registerUser(signInForm.email, signInForm.password, {
         last_name: signInForm.nickname

@@ -3,7 +3,16 @@ import { getCookie } from '@/utils/Cookie'
 import { createDirectus, createItems, rest, uploadFiles } from '@directus/sdk'
 import { showDialog } from 'vant'
 
-const client = createDirectus('http://localhost').with(rest())
+const client = createDirectus('http://mist-home.top:40066').with(
+  rest({
+    onRequest: (request: any) => {
+      request.headers['Authorization'] = 'Bearer ' + getCookie('directus_session_token')
+      request.headers['Access-Control-Allow-Origin'] = '*'
+      request.headers['Content-Type'] = 'application/json'
+      return request
+    }
+  })
+)
 
 export const addToCommodityDB = async (commodity: any) => {
   await client
@@ -33,7 +42,7 @@ export const uploadCommodityImg = async (img: any, imgsResult: any) => {
 export const getGeneratedOrder = async (commodity_id: any, receiving_account_id: any) => {
   try {
     const response = await fetch(
-      '/order/generate?commodity_id=' +
+      'http://mist-home.top:40066/order/generate?commodity_id=' +
         commodity_id +
         '&receiving_account_id=' +
         receiving_account_id,

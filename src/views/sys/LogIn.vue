@@ -85,7 +85,18 @@ const useInfo = useUserStore()
 
 const onSubmit = async (values: any) => {
   try {
-    const client = createDirectus('http://localhost').with(authentication('json')).with(rest())
+    const client = createDirectus('http://mist-home.top:40066')
+      .with(authentication('json'))
+      .with(
+        rest({
+          onRequest: (request: any) => {
+            request.headers['Access-Control-Allow-Origin'] = '*'
+            request.headers['Host'] = 'mist-home.top:40066'
+            request.headers['Content-Type'] = 'application/json'
+            return request
+          }
+        })
+      )
 
     // login http request
     await client.login(values.username, values.password).then((res: any) => {

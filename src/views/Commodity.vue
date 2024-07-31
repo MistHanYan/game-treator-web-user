@@ -10,7 +10,7 @@
         <van-swipe-item v-for="(image, index) in commodityInId.imgs" :key="index">
           <div class="commodity-container">
             <img
-              :src="'http://localhost/assets/' + image.directus_files_id"
+              :src="'http://mist-home:40067/assets/' + image.directus_files_id"
               alt="商品图片"
               class="commodity-container-img"
             />

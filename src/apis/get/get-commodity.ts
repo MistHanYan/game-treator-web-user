@@ -1,7 +1,16 @@
 import { getCookie } from '@/utils/Cookie'
 import { createDirectus, readItems, rest } from '@directus/sdk'
 
-const client = createDirectus('http://localhost').with(rest())
+const client = createDirectus('http://mist-home.top:40066').with(
+  rest({
+    onRequest: (request: any) => {
+      request.headers['Authorization'] = 'Bearer ' + getCookie('directus_session_token')
+      request.headers['Access-Control-Allow-Origin'] = '*'
+      request.headers['Content-Type'] = 'application/json'
+      return request
+    }
+  })
+)
 
 /**
 + * Retrieves commodities by tag based on the current active tab and page.
